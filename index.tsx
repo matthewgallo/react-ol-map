@@ -1,10 +1,18 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FeatureCollection, Geometry, GeoJsonProperties } from "geojson";
 import { Map, View, TileLayer, VectorLayer } from "react-openlayers";
-import { OSM } from "ol/source";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import { fromLonLat } from "ol/proj";
+import { useTheme } from "next-themes";
+import XYZ from "ol/source/XYZ";
+
+const apiKey = import.meta.env.VITE_MAP_KEY;
+const tileUrl = (dark: boolean) =>
+  `https://{a-d}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}.png?key=${apiKey}`;
+
+const ATTRIBUTION = '© <a href="https://carto.com/attributions">CARTO</a>';
+
 import "react-openlayers/dist/index.css";
 import styles from "./geojson-map.module.css";
 
@@ -36,13 +44,25 @@ export function GeoJsonMap({
     [data],
   );
 
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const [basemap] = useState(
+    () =>
+      new XYZ({ url: tileUrl(isDark), attributions: ATTRIBUTION, maxZoom: 20 }),
+  );
+
+  useEffect(() => {
+    basemap.setUrl(tileUrl(isDark));
+  }, [isDark, basemap]);
+
   return (
     <div
       className={`${styles.mapContainer} ${className || ""}`.trim()}
       style={{ width: "100%", height }}
     >
       <Map>
-        <TileLayer source={new OSM()} />
+        <TileLayer source={basemap} />
         <VectorLayer source={vectorSource} />
         <View center={fromLonLat(center)} zoom={zoom} />
       </Map>
