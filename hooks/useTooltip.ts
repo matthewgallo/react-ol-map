@@ -1,10 +1,26 @@
 import { useEffect, useMemo, useState, type RefObject } from "react";
 import type OLMap from "ol/Map";
-import type { MapBrowserEvent } from "ol";
+import { Feature, type MapBrowserEvent } from "ol";
 import type { FeatureLike } from "ol/Feature";
 import type { Pixel } from "ol/pixel";
+import type { Coordinate } from "ol/coordinate";
 
 export type FeatureProps = Record<string, unknown>;
+
+const pickFeatures = (
+  candidates: FeatureLike[],
+  coordinate: Coordinate,
+  limit: number,
+): FeatureLike[] => {
+  // Prefer features that actually contain the cursor position
+  const containing = candidates.filter(
+    (f) =>
+      f instanceof Feature && f.getGeometry()?.intersectsCoordinate(coordinate),
+  );
+  // Fall back to everything hit (cursor on a border stroke, or point/line features)
+  const pool = containing.length ? containing : candidates;
+  return pool.slice(0, limit);
+};
 
 const toProps = (feature: FeatureLike): FeatureProps => {
   const props = { ...feature.getProperties() };
@@ -19,17 +35,24 @@ export const useTooltip = (
   map: OLMap | null | undefined,
   tooltipRef: RefObject<HTMLDivElement | null>,
   enabled: boolean,
+  limit = 1,
 ): FeatureProps[] => {
   const [features, setFeatures] = useState<FeatureLike[]>([]);
 
   useEffect(() => {
     if (!map || !enabled) return;
 
-    const update = (pixel: Pixel, target: EventTarget | null) => {
+    const update = (
+      pixel: Pixel,
+      coordinate: Coordinate,
+      target: EventTarget | null,
+    ) => {
       const overControl = (target as HTMLElement | null)?.closest(
         ".ol-control",
       );
-      const next = overControl ? [] : map.getFeaturesAtPixel(pixel);
+      const next = overControl
+        ? []
+        : pickFeatures(map.getFeaturesAtPixel(pixel), coordinate, limit);
 
       const el = tooltipRef.current;
       if (el && next.length) {
@@ -42,10 +65,10 @@ export const useTooltip = (
 
     const onPointerMove = (evt: MapBrowserEvent) => {
       if (evt.dragging) return setFeatures((prev) => (prev.length ? [] : prev));
-      update(evt.pixel, evt.originalEvent.target);
+      update(evt.pixel, evt.coordinate, evt.originalEvent.target);
     };
     const onClick = (evt: MapBrowserEvent) =>
-      update(evt.pixel, evt.originalEvent.target);
+      update(evt.pixel, evt.coordinate, evt.originalEvent.target);
     const onLeave = () => setFeatures((prev) => (prev.length ? [] : prev));
 
     const targetEl = map.getTargetElement();
@@ -59,7 +82,7 @@ export const useTooltip = (
       targetEl?.removeEventListener("pointerleave", onLeave);
       setFeatures([]);
     };
-  }, [map, enabled, tooltipRef]);
+  }, [map, enabled, tooltipRef, limit]);
 
   return useMemo(() => features.map(toProps), [features]);
 };
