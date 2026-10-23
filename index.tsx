@@ -7,10 +7,12 @@ import { fromLonLat } from "ol/proj";
 import { useTheme } from "next-themes";
 import XYZ from "ol/source/XYZ";
 import type OLMap from "ol/Map";
+import { Fill, Stroke, Style } from "ol/style";
 import { useTooltip, type FeatureProps } from "./hooks/useTooltip";
 
 import "react-openlayers/dist/index.css";
 import styles from "./geojson-map.module.css";
+import { useHoverHighlight } from "./hooks/useHoverHighlight";
 
 const apiKey = import.meta.env.VITE_MAP_KEY;
 const tileUrl = (dark: boolean) =>
@@ -28,6 +30,7 @@ interface GeoJsonMapProps {
   className?: string;
   /** Called with the properties of every feature under the cursor. */
   renderTooltip?: (features: FeatureProps[]) => React.ReactNode;
+  highlightOnHover?: boolean;
 }
 
 export function GeoJsonMap({
@@ -37,7 +40,11 @@ export function GeoJsonMap({
   height = 600,
   className,
   renderTooltip,
+  highlightOnHover = true,
 }: GeoJsonMapProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const [map, setMap] = useState<OLMap | null | undefined>(null);
   const vectorSource = useMemo(
     () =>
       new VectorSource({
@@ -48,10 +55,22 @@ export function GeoJsonMap({
       }),
     [data],
   );
+  const hoverStyle = useMemo(
+    () =>
+      new Style({
+        fill: new Fill({
+          color: isDark ? "rgba(99, 179, 237, 0.45)" : "rgba(0, 90, 200, 0.35)",
+        }),
+        stroke: new Stroke({
+          color: isDark ? "#90cdf4" : "#003d8f",
+          width: 3,
+        }),
+        zIndex: 1,
+      }),
+    [isDark],
+  );
 
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-  const [map, setMap] = useState<OLMap | null | undefined>(null);
+  useHoverHighlight(map, highlightOnHover, hoverStyle);
 
   const [basemap] = useState(
     () =>

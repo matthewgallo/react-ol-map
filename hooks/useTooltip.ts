@@ -1,26 +1,12 @@
 import { useEffect, useMemo, useState, type RefObject } from "react";
 import type OLMap from "ol/Map";
-import { Feature, type MapBrowserEvent } from "ol";
+import { type MapBrowserEvent } from "ol";
 import type { FeatureLike } from "ol/Feature";
 import type { Pixel } from "ol/pixel";
 import type { Coordinate } from "ol/coordinate";
+import { pickFeatures } from "../utils/pickFeatures";
 
 export type FeatureProps = Record<string, unknown>;
-
-const pickFeatures = (
-  candidates: FeatureLike[],
-  coordinate: Coordinate,
-  limit: number,
-): FeatureLike[] => {
-  // Prefer features that actually contain the cursor position
-  const containing = candidates.filter(
-    (f) =>
-      f instanceof Feature && f.getGeometry()?.intersectsCoordinate(coordinate),
-  );
-  // Fall back to everything hit (cursor on a border stroke, or point/line features)
-  const pool = containing.length ? containing : candidates;
-  return pool.slice(0, limit);
-};
 
 const toProps = (feature: FeatureLike): FeatureProps => {
   const props = { ...feature.getProperties() };
