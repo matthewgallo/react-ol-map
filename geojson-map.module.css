@@ -1,4 +1,25 @@
+.mapContainer {
+  position: relative;
+}
+
 .mapContainer :global(.ol-map) {
   height: 100%;
   width: 100%;
+}
+
+.tooltip {
+  position: absolute;
+  display: inline-block;
+  height: auto;
+  width: auto;
+  z-index: 2;
+  background-color: var(--color-background);
+  border: 1px solid var(--gray-6);
+  color: var(--gray-12);
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  inset-inline-start: 50%;
+  transform: translateX(3%);
+  visibility: hidden;
+  pointer-events: none;
 }

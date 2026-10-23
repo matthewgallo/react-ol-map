@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import type { FeatureCollection, Geometry, GeoJsonProperties } from "geojson";
 import { Map, View, TileLayer, VectorLayer } from "react-openlayers";
 import VectorSource from "ol/source/Vector";
@@ -6,6 +6,11 @@ import GeoJSON from "ol/format/GeoJSON";
 import { fromLonLat } from "ol/proj";
 import { useTheme } from "next-themes";
 import XYZ from "ol/source/XYZ";
+import type OLMap from "ol/Map";
+import { useTooltip, type FeatureProps } from "./hooks/useTooltip";
+
+import "react-openlayers/dist/index.css";
+import styles from "./geojson-map.module.css";
 
 const apiKey = import.meta.env.VITE_MAP_KEY;
 const tileUrl = (dark: boolean) =>
@@ -13,17 +18,16 @@ const tileUrl = (dark: boolean) =>
 
 const ATTRIBUTION = '© <a href="https://carto.com/attributions">CARTO</a>';
 
-import "react-openlayers/dist/index.css";
-import styles from "./geojson-map.module.css";
-
 type GeoJsonData = FeatureCollection<Geometry, GeoJsonProperties>;
 
 interface GeoJsonMapProps {
   data: GeoJsonData;
-  center?: [number, number]; // [lon, lat]
+  center?: [number, number];
   zoom?: number;
   height?: number;
   className?: string;
+  /** Called with the properties of every feature under the cursor. */
+  renderTooltip?: (features: FeatureProps[]) => React.ReactNode;
 }
 
 export function GeoJsonMap({
@@ -32,6 +36,7 @@ export function GeoJsonMap({
   zoom = 11,
   height = 600,
   className,
+  renderTooltip,
 }: GeoJsonMapProps) {
   const vectorSource = useMemo(
     () =>
@@ -46,6 +51,7 @@ export function GeoJsonMap({
 
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const [map, setMap] = useState<OLMap | null | undefined>(null);
 
   const [basemap] = useState(
     () =>
@@ -56,15 +62,27 @@ export function GeoJsonMap({
     basemap.setUrl(tileUrl(isDark));
   }, [isDark, basemap]);
 
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const hovered = useTooltip(map, tooltipRef, !!renderTooltip);
+
   return (
     <div
       className={`${styles.mapContainer} ${className || ""}`.trim()}
       style={{ width: "100%", height }}
     >
-      <Map>
+      <Map ref={setMap}>
         <TileLayer source={basemap} />
         <VectorLayer source={vectorSource} />
         <View center={fromLonLat(center)} zoom={zoom} />
+        {renderTooltip && (
+          <div
+            ref={tooltipRef}
+            className={styles.tooltip}
+            style={{ visibility: hovered.length ? "visible" : "hidden" }}
+          >
+            {hovered.length > 0 && renderTooltip?.(hovered)}
+          </div>
+        )}
       </Map>
     </div>
   );
