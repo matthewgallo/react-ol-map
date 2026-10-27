@@ -23,3 +23,9 @@
   visibility: hidden;
   pointer-events: none;
 }
+
+.dialogContent {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+}

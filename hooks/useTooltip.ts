@@ -8,7 +8,7 @@ import { pickFeatures } from "../utils/pickFeatures";
 
 export type FeatureProps = Record<string, unknown>;
 
-const toProps = (feature: FeatureLike): FeatureProps => {
+export const toProps = (feature: FeatureLike): FeatureProps => {
   const props = { ...feature.getProperties() };
   delete props.geometry; // getProperties() includes the geometry itself
   return props;

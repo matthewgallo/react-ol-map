@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type OLMap from "ol/Map";
 import type { FeatureLike } from "ol/Feature";
 import type { StyleLike } from "ol/style/Style";
@@ -18,7 +18,15 @@ export const useVectorTileLayer = (
   style: StyleLike,
   hoverStyle: Style,
   highlightOnHover: boolean,
+  selectedId?: string | number,
 ) => {
+  const highlightRef = useRef<VectorTileLayer | null>(null);
+  const selectedIdRef = useRef(selectedId);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+    highlightRef.current?.changed();
+  }, [selectedId]);
   useEffect(() => {
     if (!map || !tiles) return;
 
@@ -30,11 +38,16 @@ export const useVectorTileLayer = (
       source,
       renderMode: "vector",
       zIndex: 10,
-      style: (f) =>
-        hoveredId !== undefined && idOf(f) === hoveredId
+      style: (f) => {
+        const id = idOf(f);
+        if (id === undefined) return undefined;
+        return id === hoveredId || id === selectedIdRef.current
           ? hoverStyle
-          : undefined,
+          : undefined;
+      },
     });
+
+    highlightRef.current = highlight;
 
     map.addLayer(base);
     map.addLayer(highlight);
@@ -66,6 +79,7 @@ export const useVectorTileLayer = (
       map.removeLayer(base);
       map.removeLayer(highlight);
       if (targetEl) targetEl.style.cursor = "";
+      highlightRef.current = null;
     };
   }, [map, tiles, style, hoverStyle, highlightOnHover]);
 };
