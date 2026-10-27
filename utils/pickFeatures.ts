@@ -14,5 +14,13 @@ export const pickFeatures = (
   );
   // Fall back to everything hit (cursor on a border stroke, or point/line features)
   const pool = containing.length ? containing : candidates;
-  return pool.slice(0, limit);
+  const seen = new Set();
+  const unique = pool.filter((f) => {
+    const id = f.getId();
+    if (id === undefined) return true;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  return unique.slice(0, limit);
 };
