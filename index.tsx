@@ -8,20 +8,20 @@ import {
 } from "react";
 import type { FeatureCollection, Geometry, GeoJsonProperties } from "geojson";
 import type { FeatureLike } from "ol/Feature";
-import { Map, View, TileLayer, VectorLayer } from "react-openlayers";
+import { Map, View, TileLayer } from "react-openlayers";
 import { Button, Dialog, Flex } from "@radix-ui/themes";
-import VectorSource from "ol/source/Vector";
-import GeoJSON from "ol/format/GeoJSON";
 import { fromLonLat } from "ol/proj";
 import { useTheme } from "next-themes";
 import XYZ from "ol/source/XYZ";
 import type OLMap from "ol/Map";
-import { Fill, Stroke, Style } from "ol/style";
+import { Circle, Fill, Stroke, Style } from "ol/style";
 import { useTooltip, toProps, type FeatureProps } from "./hooks/useTooltip";
 import { useHoverHighlight } from "./hooks/useHoverHighlight";
 import { useSelectedHighlight } from "./hooks/useSelectedHighlight";
 import { useIsTouchScreen } from "../../hooks/useIsTouchScreen";
 import { useFeatureClick } from "./hooks/useFeatureClick";
+import { useGeoJsonLayer } from "./hooks/useGeoJsonLayer";
+import { useThemeColors } from "./hooks/useThemeColors";
 import {
   useVectorTileLayer,
   type TileConfig,
@@ -38,7 +38,7 @@ const ATTRIBUTION = '© <a href="https://carto.com/attributions">CARTO</a>';
 
 type GeoJsonData = FeatureCollection<Geometry, GeoJsonProperties>;
 
-interface BaseProps {
+export interface BaseProps {
   center?: [number, number];
   zoom?: number;
   height?: number;
@@ -52,12 +52,14 @@ interface BaseProps {
 type GeoJsonMapProps = BaseProps &
   ({ data: GeoJsonData; tiles?: never } | { tiles: TileConfig; data?: never });
 
+export type { FeatureProps } from "./hooks/useTooltip";
+
 export function GeoJsonMap({
   data,
   tiles,
   center = [-79.0558, 35.9132],
   zoom = 11,
-  height = 600,
+  height,
   className,
   renderTooltip,
   renderDialog: renderDialogProp,
@@ -69,39 +71,39 @@ export function GeoJsonMap({
   const isTouch = useIsTouchScreen();
   const [map, setMap] = useState<OLMap | null | undefined>(null);
 
-  const vectorSource = useMemo(
-    () =>
-      data
-        ? new VectorSource({
-            features: new GeoJSON().readFeatures(data, {
-              dataProjection: "EPSG:4326",
-              featureProjection: "EPSG:3857",
-            }),
-          })
-        : undefined,
-    [data],
-  );
+  // Feature colors follow the Radix accent color and light/dark appearance
+  const colors = useThemeColors();
 
   const hoverStyle = useMemo(
     () =>
       new Style({
-        fill: new Fill({
-          color: isDark ? "rgba(99, 179, 237, 0.45)" : "rgba(0, 90, 200, 0.35)",
+        fill: new Fill({ color: colors.hoverFill }),
+        stroke: new Stroke({ color: colors.hoverStroke, width: 3 }),
+        image: new Circle({
+          radius: 7,
+          fill: new Fill({ color: colors.hoverStroke }),
+          stroke: new Stroke({ color: colors.outline, width: 2 }),
         }),
-        stroke: new Stroke({ color: isDark ? "#90cdf4" : "#003d8f", width: 3 }),
         zIndex: 1,
       }),
-    [isDark],
+    [colors],
   );
 
   const baseStyle = useMemo(
     () =>
       new Style({
-        fill: new Fill({ color: "rgba(255, 255, 255, 0.4)" }),
-        stroke: new Stroke({ color: "#3399CC", width: 1.25 }),
+        fill: new Fill({ color: colors.fill }),
+        stroke: new Stroke({ color: colors.stroke, width: 1.25 }),
+        image: new Circle({
+          radius: 5,
+          fill: new Fill({ color: colors.stroke }),
+          stroke: new Stroke({ color: colors.outline, width: 1.5 }),
+        }),
       }),
-    [],
+    [colors],
   );
+
+  useGeoJsonLayer(map, data, baseStyle);
 
   // Dialog + selection state. Features are kept after closing so the dialog
   // content doesn't vanish mid-way through the close animation.
@@ -146,11 +148,10 @@ export function GeoJsonMap({
     <>
       <div
         className={`${styles.mapContainer} ${className || ""}`.trim()}
-        style={{ width: "100%", height }}
+        style={height ? { height } : undefined}
       >
         <Map ref={setMap}>
           <TileLayer source={basemap} />
-          {vectorSource && <VectorLayer source={vectorSource} />}
           <View center={fromLonLat(center)} zoom={zoom} />
           {renderTooltip && !isTouch && (
             <div

@@ -1,5 +1,7 @@
 .mapContainer {
   position: relative;
+  width: 100%;
+  height: min(70vh, 600px);
 }
 
 .mapContainer :global(.ol-map) {
@@ -13,11 +15,12 @@
   height: auto;
   width: auto;
   z-index: 2;
-  background-color: var(--color-background);
-  border: 1px solid var(--gray-6);
+  background-color: var(--color-panel-solid);
+  border: 1px solid var(--gray-a6);
   color: var(--gray-12);
-  border-radius: 0.25rem;
-  padding: 0.25rem;
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-4);
+  padding: var(--space-2) var(--space-3);
   inset-inline-start: 50%;
   transform: translateX(3%);
   visibility: hidden;
