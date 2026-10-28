@@ -1,5 +1,6 @@
 import { Callout, Skeleton } from "@radix-ui/themes";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { useTranslation } from "react-i18next";
 import { GeoJsonMap, type BaseProps } from ".";
 import { useGeoJson } from "../../hooks/useGeoJson";
 
@@ -11,6 +12,7 @@ interface AsyncGeoJsonMapProps extends BaseProps {
 
 // Fetches GeoJSON from `url` and renders a map, with loading/error states
 export function AsyncGeoJsonMap({ url, ...props }: AsyncGeoJsonMapProps) {
+  const { t } = useTranslation();
   const { data, error } = useGeoJson(url);
 
   if (error) {
@@ -19,7 +21,7 @@ export function AsyncGeoJsonMap({ url, ...props }: AsyncGeoJsonMapProps) {
         <Callout.Icon>
           <ExclamationTriangleIcon />
         </Callout.Icon>
-        <Callout.Text>Couldn't load map data.</Callout.Text>
+        <Callout.Text>{t("map.loadError")}</Callout.Text>
       </Callout.Root>
     );
   }

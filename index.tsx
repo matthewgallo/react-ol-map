@@ -12,6 +12,7 @@ import { Map, View, TileLayer } from "react-openlayers";
 import { Button, Dialog, Flex } from "@radix-ui/themes";
 import { fromLonLat } from "ol/proj";
 import { useTheme } from "next-themes";
+import { useTranslation } from "react-i18next";
 import XYZ from "ol/source/XYZ";
 import type OLMap from "ol/Map";
 import { Circle, Fill, Stroke, Style } from "ol/style";
@@ -64,9 +65,10 @@ export function GeoJsonMap({
   className,
   renderTooltip,
   renderDialog: renderDialogProp,
-  dialogTitle = "Details",
+  dialogTitle,
   highlightOnHover = true,
 }: GeoJsonMapProps) {
+  const { t } = useTranslation();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const isTouch = useIsTouchScreen();
@@ -179,11 +181,11 @@ export function GeoJsonMap({
             maxWidth="450px"
             aria-describedby={undefined}
           >
-            <Dialog.Title>{dialogTitle}</Dialog.Title>
+            <Dialog.Title>{dialogTitle ?? t("map.details")}</Dialog.Title>
             {renderDialog(selectedProps)}
             <Flex justify="end" mt="4">
               <Dialog.Close>
-                <Button variant="soft">Close</Button>
+                <Button variant="soft">{t("map.close")}</Button>
               </Dialog.Close>
             </Flex>
           </Dialog.Content>
