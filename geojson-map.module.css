@@ -1,7 +1,10 @@
 .mapContainer {
   position: relative;
   width: 100%;
-  height: min(70vh, 600px);
+  /* Size from width, not vh: mobile toolbars resize the viewport while
+     scrolling, and a vh-based height shifts the page under the scroll */
+  aspect-ratio: 1;
+  max-height: 600px;
 }
 
 .mapContainer :global(.ol-map) {
