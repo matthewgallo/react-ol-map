@@ -34,7 +34,8 @@ const apiKey = import.meta.env.VITE_MAP_KEY;
 const tileUrl = (dark: boolean) =>
   `https://{a-d}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}.png?key=${apiKey}`;
 
-const ATTRIBUTION = '© <a href="https://carto.com/attributions">CARTO</a>';
+const ATTRIBUTION =
+  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>';
 
 type GeoJsonData = FeatureCollection<Geometry, GeoJsonProperties>;
 
@@ -135,7 +136,12 @@ export function GeoJsonMap({
 
   const [basemap] = useState(
     () =>
-      new XYZ({ url: tileUrl(isDark), attributions: ATTRIBUTION, maxZoom: 20 }),
+      new XYZ({
+        url: tileUrl(isDark),
+        attributions: ATTRIBUTION,
+        attributionsCollapsible: false,
+        maxZoom: 20,
+      }),
   );
   useEffect(() => {
     basemap.setUrl(tileUrl(isDark));
@@ -150,7 +156,8 @@ export function GeoJsonMap({
         className={`${styles.mapContainer} ${className || ""}`.trim()}
         style={height ? { height } : undefined}
       >
-        <Map ref={setMap}>
+        {/* react-openlayers adds an OSM layer unless `layers` is given, which means extra layers would be rendered unintentionally */}
+        <Map ref={setMap} layers={[]}>
           <TileLayer source={basemap} />
           <View center={fromLonLat(center)} zoom={zoom} />
           {renderTooltip && !isTouch && (
