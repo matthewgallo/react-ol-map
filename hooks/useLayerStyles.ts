@@ -9,6 +9,12 @@ const HOVER_SCALE = 1.25;
 
 // Shape styles in a Radix color that follow the light/dark appearance. Points
 // in an area layer are drawn as dots.
+//
+// The dots set declutterMode "none" so they can be hovered and clicked in
+// vector tile layers. When decluttering is off, OpenLayers (10.11) still
+// filters tile hit detection against an empty decluttered-feature list, which
+// silently drops image-styled points unless their declutterMode is "none".
+// The layers don't declutter, so this doesn't change how the dots render.
 export const useAreaStyles = (color: MapColor = "accent") => {
   const colors = useThemeColors(color);
 
@@ -19,6 +25,7 @@ export const useAreaStyles = (color: MapColor = "accent") => {
         stroke: new Stroke({ color: colors.stroke, width: 1.25 }),
         image: new Circle({
           radius: 5,
+          declutterMode: "none",
           fill: new Fill({ color: colors.stroke }),
           stroke: new Stroke({ color: colors.outline, width: 1.5 }),
         }),
@@ -28,6 +35,7 @@ export const useAreaStyles = (color: MapColor = "accent") => {
         stroke: new Stroke({ color: colors.hoverStroke, width: 3 }),
         image: new Circle({
           radius: 7,
+          declutterMode: "none",
           fill: new Fill({ color: colors.hoverStroke }),
           stroke: new Stroke({ color: colors.outline, width: 2 }),
         }),
