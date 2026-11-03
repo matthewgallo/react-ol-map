@@ -19,8 +19,7 @@ export const useFeatureClick = (
       if (overControl) return;
 
       const hits = map.getFeaturesAtPixel(evt.pixel, { hitTolerance: 6 });
-      const picked = pickFeatures(hits, evt.coordinate, 1);
-      if (picked.length) onSelect(picked);
+      onSelect(pickFeatures(hits, evt.coordinate, 1)); // [] on empty map
     };
 
     map.on("singleclick", onTap);

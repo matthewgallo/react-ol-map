@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type OLMap from "ol/Map";
 import type { FeatureLike } from "ol/Feature";
 import type { StyleLike } from "ol/style/Style";
 import type { Style } from "ol/style";
+import { createEmpty, extend, isEmpty, type Extent } from "ol/extent";
 import VectorTileLayer from "ol/layer/VectorTile";
 import { PMTilesVectorSource } from "ol-pmtiles";
 
@@ -104,4 +105,21 @@ export const useVectorTileLayer = (
       highlightRef.current = null;
     };
   }, [map, url, style, hoverStyle, highlightOnHover]);
+
+  // Features are clipped at tile boundaries, so a clicked feature only covers
+  // one tile. Combine its pieces from the loaded tiles in view instead.
+  return useCallback(
+    (id: string | number): Extent | undefined => {
+      const base = baseRef.current;
+      const size = map?.getSize();
+      if (!map || !base || !size) return undefined;
+      const viewExtent = map.getView().calculateExtent(size);
+      const extent = createEmpty();
+      for (const f of base.getFeaturesInExtent(viewExtent)) {
+        if (idOf(f) === id) extend(extent, f.getExtent());
+      }
+      return isEmpty(extent) ? undefined : extent;
+    },
+    [map],
+  );
 };

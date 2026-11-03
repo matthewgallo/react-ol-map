@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type OLMap from "ol/Map";
 import type { MapBrowserEvent } from "ol";
-import Feature from "ol/Feature";
+import Feature, { type FeatureLike } from "ol/Feature";
 import type { StyleLike } from "ol/style/Style";
 import { pickFeatures } from "../utils/pickFeatures";
 
@@ -9,15 +9,25 @@ export const useHoverHighlight = (
   map: OLMap | null | undefined,
   enabled: boolean,
   hoverStyle: StyleLike,
+  selected?: FeatureLike, // keeps its highlight from useSelectedHighlight
 ) => {
+  const selectedRef = useRef(selected);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
+
   useEffect(() => {
     if (!map || !enabled) return;
 
     let hovered: Feature | undefined;
     const targetEl = map.getTargetElement();
 
+    // undefined = fall back to the layer's style
+    const unstyle = (f: Feature | undefined) => {
+      if (f !== selectedRef.current) f?.setStyle(undefined);
+    };
     const clear = () => {
-      hovered?.setStyle(undefined); // undefined = fall back to the layer's style
+      unstyle(hovered);
       hovered = undefined;
     };
 
@@ -35,8 +45,8 @@ export const useHoverHighlight = (
       const next = picked instanceof Feature ? picked : undefined;
       if (next === hovered) return; // same feature, nothing to do
 
-      hovered?.setStyle(undefined);
-      next?.setStyle(hoverStyle);
+      unstyle(hovered);
+      if (next !== selectedRef.current) next?.setStyle(hoverStyle);
       hovered = next;
     };
 
