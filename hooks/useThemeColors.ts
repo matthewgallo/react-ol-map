@@ -1,17 +1,25 @@
 import { useMemo, useSyncExternalStore } from "react";
+import type { MapColor } from "../types";
 
-// Radix Themes tokens used to style map features
-const TOKENS = {
-  fill: "--accent-a4",
-  stroke: "--accent-9",
-  hoverFill: "--accent-a6",
-  hoverStroke: "--accent-11",
-  outline: "--color-panel-solid",
+// Radix Themes steps used to style map features, read from the chosen color
+// scale (e.g. --accent-9, --blue-9)
+const STEPS = {
+  fill: "a4",
+  stroke: "9",
+  hoverFill: "a6",
+  hoverStroke: "11",
 } as const;
+const OUTLINE = "--color-panel-solid";
 
-export type ThemeColors = Record<keyof typeof TOKENS, string>;
+const tokensFor = (color: MapColor) => [
+  ...Object.values(STEPS).map((step) => `--${color}-${step}`),
+  OUTLINE,
+];
 
-// Used until the Theme root is in the DOM (tomato, light)
+export type ThemeColors = Record<keyof typeof STEPS | "outline", string>;
+
+// Used until the Theme root is in the DOM, or for an unknown color (tomato,
+// light)
 const FALLBACK: ThemeColors = {
   fill: "rgba(229, 77, 46, 0.2)",
   stroke: "#e54d2e",
@@ -31,11 +39,11 @@ const subscribe = (onChange: () => void) => {
 };
 
 // Raw token values joined into a string so the snapshot is stable between reads
-const getSnapshot = () => {
+const getSnapshot = (color: MapColor) => {
   const el =
     document.querySelector(".radix-themes") ?? document.documentElement;
   const style = getComputedStyle(el);
-  return Object.values(TOKENS)
+  return tokensFor(color)
     .map((token) => style.getPropertyValue(token).trim())
     .join("|");
 };
@@ -58,12 +66,17 @@ const toRgba = (color: string) => {
   return `rgba(${r}, ${g}, ${b}, ${+(a / 255).toFixed(3)})`;
 };
 
-export const useThemeColors = (): ThemeColors => {
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => "");
+// Colors from a Radix scale ("accent" by default), as sRGB for OpenLayers
+export const useThemeColors = (color: MapColor = "accent"): ThemeColors => {
+  const snapshot = useSyncExternalStore(
+    subscribe,
+    () => getSnapshot(color),
+    () => "",
+  );
 
   return useMemo(() => {
     const values = snapshot.split("|");
-    const keys = Object.keys(TOKENS) as (keyof ThemeColors)[];
+    const keys = [...Object.keys(STEPS), "outline"] as (keyof ThemeColors)[];
     return Object.fromEntries(
       keys.map((key, i) => [
         key,

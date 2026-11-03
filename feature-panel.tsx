@@ -11,11 +11,15 @@ import { Box, Flex, Heading, IconButton, ScrollArea } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { useTranslation } from "react-i18next";
 
+import type { MapColor } from "./types";
+import { layerColorStyle } from "./utils/layerColor";
+
 import styles from "./map.module.css";
 
 interface FeaturePanelProps {
   ref?: Ref<HTMLElement>;
   title?: string;
+  color?: MapColor; // of the feature's layer, for the swatch and edge
   onClose: () => void;
   children: ReactNode;
 }
@@ -25,6 +29,7 @@ interface FeaturePanelProps {
 export function FeaturePanel({
   ref,
   title,
+  color,
   onClose,
   children,
 }: FeaturePanelProps) {
@@ -69,9 +74,15 @@ export function FeaturePanel({
   }, []);
 
   return (
-    <aside ref={panelRef} className={styles.panel} aria-labelledby={titleId}>
+    <aside
+      ref={panelRef}
+      className={styles.panel}
+      style={layerColorStyle(color)}
+      aria-labelledby={titleId}
+    >
       <Flex justify="between" align="center" gap="2" p="3">
-        <Heading as="h3" size="3" id={titleId}>
+        <Heading as="h3" size="3" id={titleId} className={styles.layerTitle}>
+          <span className={styles.swatch} aria-hidden />
           {title ?? t("map.details")}
         </Heading>
         <IconButton

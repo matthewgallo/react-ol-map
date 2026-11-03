@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import type OLMap from "ol/Map";
-import type { FeatureLike } from "ol/Feature";
 import type { Extent } from "ol/extent";
 import { getHeight, getWidth } from "ol/extent";
 
@@ -10,10 +9,10 @@ const MAX_ZOOM = 17; // don't zoom in further than this on small areas
 // Animates the view to fit the selected feature, leaving `padding` (top,
 // right, bottom, left in pixels) clear for UI over the map. Points are only
 // centered, keeping the current zoom.
-export const useFitSelected = (
+export const useFitSelected = <T>(
   map: OLMap | null | undefined,
-  selected: FeatureLike | undefined,
-  extentOf: (feature: FeatureLike) => Extent | undefined,
+  selected: T | undefined,
+  extentOf: (selected: T) => Extent | undefined,
   getPadding: () => number[],
 ) => {
   // Only a new selection refits, not a change to these callbacks

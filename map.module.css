@@ -22,6 +22,8 @@
   flex-direction: column;
   background-color: var(--color-panel-solid);
   border: 1px solid var(--gray-a6);
+  /* Edge in the layer's color, matching the tooltip */
+  border-inline-start: 3px solid var(--layer-color, var(--accent-9));
   border-radius: var(--radius-4);
   box-shadow: var(--shadow-5);
   overflow: hidden;
@@ -61,18 +63,69 @@
   z-index: 2;
   background-color: var(--color-panel-solid);
   border: 1px solid var(--gray-a6);
+  /* Edge in the layer's color, set by InteractiveLayer */
+  border-inline-start: 3px solid var(--layer-color, var(--accent-9));
   color: var(--gray-12);
   border-radius: var(--radius-3);
   box-shadow: var(--shadow-4);
   padding: var(--space-2) var(--space-3);
-  inset-inline-start: 50%;
+  /* Follows the pointer, set on the map element by useHoveredHit */
+  left: var(--pointer-x, 0);
+  top: var(--pointer-y, 0);
   transform: translateX(3%);
-  visibility: hidden;
   pointer-events: none;
+}
+
+/* A square in the layer's color, before its name in the tooltip and details.
+   --layer-color is set by layerColorStyle. */
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-1);
+  background-color: var(--layer-color, var(--accent-9));
+}
+
+/* Details heading: the layer's name after its swatch */
+.layerTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The layer a hovered feature belongs to */
+.tooltipTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+  padding-block-end: var(--space-1);
+  border-block-end: 1px solid var(--gray-a5);
+  font-size: var(--font-size-1);
+  font-weight: var(--font-weight-medium);
+  color: var(--gray-11);
+  white-space: nowrap;
+}
+
+/* Covers the map while a layer's data loads */
+.loading {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+}
+
+/* Shown over the map when a layer's data fails to load */
+.status {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline: var(--space-3);
+  z-index: 4;
 }
 
 .dialogContent {
   position: fixed;
   inset-block-end: 0;
   inset-inline-start: 0;
+  /* Edge in the layer's color; along the top, as a bottom sheet */
+  border-block-start: 3px solid var(--layer-color, var(--accent-9));
 }

@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type OLMap from "ol/Map";
 import type { FeatureLike } from "ol/Feature";
 import type { StyleLike } from "ol/style/Style";
-import type { Style } from "ol/style";
 import { createEmpty, extend, isEmpty, type Extent } from "ol/extent";
 import VectorTileLayer from "ol/layer/VectorTile";
 import { PMTilesVectorSource } from "ol-pmtiles";
@@ -11,115 +10,45 @@ export interface TileConfig {
   url: string; // URL of the .pmtiles/vector file
 }
 
-const idOf = (f: FeatureLike) => f.getId();
-
+// Creates a PMTiles vector tile layer, rebuilt only when the URL changes, so
+// an inline `tiles={{ url }}` or a theme change doesn't refetch the tiles.
+// Add it to the map with useMapLayer (InteractiveLayer does this).
 export const useVectorTileLayer = (
-  map: OLMap | null | undefined,
-  tiles: TileConfig | undefined,
+  url: string | undefined,
   style: StyleLike,
-  hoverStyle: Style,
-  highlightOnHover: boolean,
-  selectedId?: string | number,
-  visible = true,
 ) => {
-  const baseRef = useRef<VectorTileLayer | null>(null);
-  const highlightRef = useRef<VectorTileLayer | null>(null);
-  const selectedIdRef = useRef(selectedId);
-  const visibleRef = useRef(visible);
-  // Keyed on the URL, not the config object, so callers passing an inline
-  // `tiles={{ url }}` don't rebuild the layers (and refetch tiles) every render
-  const url = tiles?.url;
-
-  // Declared before the layer effect so recreated layers start with this value
-  useEffect(() => {
-    visibleRef.current = visible;
-    baseRef.current?.setVisible(visible);
-    highlightRef.current?.setVisible(visible);
-  }, [visible]);
+  const layer = useMemo(
+    () =>
+      url
+        ? new VectorTileLayer({ source: new PMTilesVectorSource({ url }) })
+        : undefined,
+    [url],
+  );
 
   useEffect(() => {
-    selectedIdRef.current = selectedId;
-    highlightRef.current?.changed();
-  }, [selectedId]);
-  useEffect(() => {
-    if (!map || !url) return;
+    layer?.setStyle(style);
+  }, [layer, style]);
 
-    const source = new PMTilesVectorSource({ url });
-    const base = new VectorTileLayer({
-      source,
-      style,
-      visible: visibleRef.current,
-    });
+  return layer;
+};
 
-    let hoveredId: string | number | undefined;
-    const highlight = new VectorTileLayer({
-      source,
-      renderMode: "vector",
-      zIndex: 10,
-      visible: visibleRef.current,
-      style: (f) => {
-        const id = idOf(f);
-        if (id === undefined) return undefined;
-        return id === hoveredId || id === selectedIdRef.current
-          ? hoverStyle
-          : undefined;
-      },
-    });
-
-    baseRef.current = base;
-    highlightRef.current = highlight;
-
-    map.addLayer(base);
-    map.addLayer(highlight);
-
-    const targetEl = map.getTargetElement();
-    const setHovered = (id: string | number | undefined) => {
-      if (id === hoveredId) return;
-      hoveredId = id;
-      highlight.changed(); // re-run the style function
-    };
-
-    const onMove = (evt: { dragging: boolean; pixel: number[] }) => {
-      if (!highlightOnHover) return;
-      if (evt.dragging) return setHovered(undefined);
-      // Only the top-most feature counts, so a tile under an overlaid marker
-      // isn't highlighted along with it
-      const top = map.forEachFeatureAtPixel(
-        evt.pixel,
-        (feature, layer) => ({ feature, layer }),
-        { layerFilter: (l) => l !== highlight }, // skip our own highlight layer
-      );
-      setHovered(top?.layer === base ? idOf(top.feature) : undefined);
-    };
-    const onLeave = () => setHovered(undefined);
-
-    map.on("pointermove", onMove as never);
-    targetEl?.addEventListener("pointerleave", onLeave);
-
-    return () => {
-      map.un("pointermove", onMove as never);
-      targetEl?.removeEventListener("pointerleave", onLeave);
-      map.removeLayer(base);
-      map.removeLayer(highlight);
-      baseRef.current = null;
-      highlightRef.current = null;
-    };
-  }, [map, url, style, hoverStyle, highlightOnHover]);
-
-  // Features are clipped at tile boundaries, so a clicked feature only covers
-  // one tile. Combine its pieces from the loaded tiles in view instead.
-  return useCallback(
-    (id: string | number): Extent | undefined => {
-      const base = baseRef.current;
+// Features are clipped at tile boundaries, so a clicked feature only covers
+// one tile. Combines its pieces from the loaded tiles in view instead.
+export const useTileExtent = (
+  map: OLMap | null | undefined,
+  layer: VectorTileLayer | undefined,
+) =>
+  useCallback(
+    (feature: FeatureLike): Extent | undefined => {
+      const id = feature.getId();
       const size = map?.getSize();
-      if (!map || !base || !size) return undefined;
+      if (!map || !layer || !size || id === undefined) return undefined;
       const viewExtent = map.getView().calculateExtent(size);
       const extent = createEmpty();
-      for (const f of base.getFeaturesInExtent(viewExtent)) {
-        if (idOf(f) === id) extend(extent, f.getExtent());
+      for (const f of layer.getFeaturesInExtent(viewExtent)) {
+        if (f.getId() === id) extend(extent, f.getExtent());
       }
       return isEmpty(extent) ? undefined : extent;
     },
-    [map],
+    [map, layer],
   );
-};

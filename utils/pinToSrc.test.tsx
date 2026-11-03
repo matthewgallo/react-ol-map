@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { ThemeColors } from "./hooks/useThemeColors";
-import { DefaultPin, pinToSrc, type PinProps } from "./pin";
+import type { ThemeColors } from "../hooks/useThemeColors";
+import { DefaultPin, type PinProps } from "../pin";
+import { pinToSrc } from "./pinToSrc";
 
 const colors: ThemeColors = {
   fill: "rgba(0, 0, 0, 0.2)",
