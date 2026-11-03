@@ -25,6 +25,9 @@ export const useVectorTileLayer = (
   const highlightRef = useRef<VectorTileLayer | null>(null);
   const selectedIdRef = useRef(selectedId);
   const visibleRef = useRef(visible);
+  // Keyed on the URL, not the config object, so callers passing an inline
+  // `tiles={{ url }}` don't rebuild the layers (and refetch tiles) every render
+  const url = tiles?.url;
 
   // Declared before the layer effect so recreated layers start with this value
   useEffect(() => {
@@ -38,9 +41,9 @@ export const useVectorTileLayer = (
     highlightRef.current?.changed();
   }, [selectedId]);
   useEffect(() => {
-    if (!map || !tiles) return;
+    if (!map || !url) return;
 
-    const source = new PMTilesVectorSource({ url: tiles.url });
+    const source = new PMTilesVectorSource({ url });
     const base = new VectorTileLayer({
       source,
       style,
@@ -100,5 +103,5 @@ export const useVectorTileLayer = (
       baseRef.current = null;
       highlightRef.current = null;
     };
-  }, [map, tiles, style, hoverStyle, highlightOnHover]);
+  }, [map, url, style, hoverStyle, highlightOnHover]);
 };
