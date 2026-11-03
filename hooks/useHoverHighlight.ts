@@ -19,7 +19,6 @@ export const useHoverHighlight = (
     const clear = () => {
       hovered?.setStyle(undefined); // undefined = fall back to the layer's style
       hovered = undefined;
-      if (targetEl) targetEl.style.cursor = "";
     };
 
     const onPointerMove = (evt: MapBrowserEvent) => {
@@ -39,7 +38,6 @@ export const useHoverHighlight = (
       hovered?.setStyle(undefined);
       next?.setStyle(hoverStyle);
       hovered = next;
-      if (targetEl) targetEl.style.cursor = next ? "pointer" : "";
     };
 
     map.on("pointermove", onPointerMove);

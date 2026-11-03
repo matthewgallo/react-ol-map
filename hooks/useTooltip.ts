@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import type OLMap from "ol/Map";
 import { type MapBrowserEvent } from "ol";
 import type { FeatureLike } from "ol/Feature";
@@ -22,7 +22,7 @@ export const useTooltip = (
   tooltipRef: RefObject<HTMLDivElement | null>,
   enabled: boolean,
   limit = 1,
-): FeatureProps[] => {
+): FeatureLike[] => {
   const [features, setFeatures] = useState<FeatureLike[]>([]);
 
   useEffect(() => {
@@ -70,5 +70,5 @@ export const useTooltip = (
     };
   }, [map, enabled, tooltipRef, limit]);
 
-  return useMemo(() => features.map(toProps), [features]);
+  return features;
 };

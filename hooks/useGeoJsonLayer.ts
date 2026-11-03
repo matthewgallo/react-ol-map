@@ -7,16 +7,20 @@ import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 
 // Owns the GeoJSON vector layer so its style can change after creation
-// (react-openlayers' VectorLayer ignores prop updates)
+// (react-openlayers' VectorLayer ignores prop updates). Higher zIndex layers
+// draw on top, which is how datasets are overlaid.
 export const useGeoJsonLayer = (
   map: OLMap | null | undefined,
   data: FeatureCollection | undefined,
   style: StyleLike,
+  zIndex?: number,
+  visible = true,
 ) => {
   const layer = useMemo(
     () =>
       data
         ? new VectorLayer({
+            zIndex,
             source: new VectorSource({
               features: new GeoJSON().readFeatures(data, {
                 dataProjection: "EPSG:4326",
@@ -25,7 +29,7 @@ export const useGeoJsonLayer = (
             }),
           })
         : undefined,
-    [data],
+    [data, zIndex],
   );
 
   useEffect(() => {
@@ -39,4 +43,11 @@ export const useGeoJsonLayer = (
   useEffect(() => {
     layer?.setStyle(style);
   }, [layer, style]);
+
+  // Hidden layers are also skipped by hit detection (hover, tooltips, taps)
+  useEffect(() => {
+    layer?.setVisible(visible);
+  }, [layer, visible]);
+
+  return layer;
 };

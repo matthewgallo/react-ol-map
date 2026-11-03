@@ -1,62 +1,64 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import type { FeatureCollection, Geometry, GeoJsonProperties } from "geojson";
-import type { FeatureLike } from "ol/Feature";
+import Feature, { type FeatureLike } from "ol/Feature";
 import { Map, View, TileLayer } from "react-openlayers";
-import { Button, Dialog, Flex } from "@radix-ui/themes";
 import { fromLonLat } from "ol/proj";
-import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
-import XYZ from "ol/source/XYZ";
 import type OLMap from "ol/Map";
-import { Circle, Fill, Stroke, Style } from "ol/style";
+import type { StyleFunction } from "ol/style/Style";
+import { FeatureDialog } from "./feature-dialog";
 import { useTooltip, toProps, type FeatureProps } from "./hooks/useTooltip";
 import { useHoverHighlight } from "./hooks/useHoverHighlight";
 import { useSelectedHighlight } from "./hooks/useSelectedHighlight";
 import { useIsTouchScreen } from "../../hooks/useIsTouchScreen";
+import { useBasemap } from "./hooks/useBasemap";
 import { useFeatureClick } from "./hooks/useFeatureClick";
+import { useFullScreenControl } from "./hooks/useFullScreenControl";
+import { useHoverCursor } from "./hooks/useHoverCursor";
 import { useGeoJsonLayer } from "./hooks/useGeoJsonLayer";
-import { useThemeColors } from "./hooks/useThemeColors";
+import { useMapStyles } from "./hooks/useMapStyles";
 import {
   useVectorTileLayer,
   type TileConfig,
 } from "./hooks/useVectorTileLayer";
 
 import "react-openlayers/dist/index.css";
-import styles from "./geojson-map.module.css";
+import styles from "./map.module.css";
 
-const apiKey = import.meta.env.VITE_MAP_KEY;
-const tileUrl = (dark: boolean) =>
-  `https://{a-d}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}.png?key=${apiKey}`;
-
-const ATTRIBUTION =
-  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>';
+// Markers draw above the tile highlight layer (zIndex 10)
+const MARKERS_Z_INDEX = 20;
 
 type GeoJsonData = FeatureCollection<Geometry, GeoJsonProperties>;
+type Render = (features: FeatureProps[]) => ReactNode;
+
+// Point features drawn as pins on top of the map's main dataset
+export interface MarkerLayer {
+  data: GeoJsonData;
+  title?: string; // dialog title when a pin is selected
+  render?: Render; // tooltip and dialog content
+  visible?: boolean;
+}
 
 export interface BaseProps {
   center?: [number, number];
   zoom?: number;
   height?: number;
   className?: string;
-  renderTooltip?: (features: FeatureProps[]) => ReactNode;
-  renderDialog?: (features: FeatureProps[]) => ReactNode;
+  renderTooltip?: Render;
+  renderDialog?: Render;
   dialogTitle?: string;
   highlightOnHover?: boolean;
+  markers?: MarkerLayer;
+  mainVisible?: boolean; // visibility of the `data` or `tiles` layer
+  fullScreen?: boolean; // show the full screen button
 }
 
-type GeoJsonMapProps = BaseProps &
+type FeatureMapProps = BaseProps &
   ({ data: GeoJsonData; tiles?: never } | { tiles: TileConfig; data?: never });
 
 export type { FeatureProps } from "./hooks/useTooltip";
 
-export function GeoJsonMap({
+export function FeatureMap({
   data,
   tiles,
   center = [-79.0558, 35.9132],
@@ -64,93 +66,93 @@ export function GeoJsonMap({
   height,
   className,
   renderTooltip,
-  renderDialog: renderDialogProp,
+  renderDialog = renderTooltip,
   dialogTitle,
   highlightOnHover = true,
-}: GeoJsonMapProps) {
+  markers,
+  mainVisible = true,
+  fullScreen = true,
+}: FeatureMapProps) {
   const { t } = useTranslation();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
   const isTouch = useIsTouchScreen();
   const [map, setMap] = useState<OLMap | null | undefined>(null);
+  const basemap = useBasemap();
+  const style = useMapStyles();
 
-  // Feature colors follow the Radix accent color and light/dark appearance
-  const colors = useThemeColors();
+  // Layers
+  useGeoJsonLayer(map, data, style.base, undefined, mainVisible);
+  const markerLayer = useGeoJsonLayer(
+    map,
+    markers?.data,
+    style.pin,
+    MARKERS_Z_INDEX,
+    markers?.visible ?? true,
+  );
+  useFullScreenControl(map, fullScreen, t("map.fullScreen"));
 
-  const hoverStyle = useMemo(
-    () =>
-      new Style({
-        fill: new Fill({ color: colors.hoverFill }),
-        stroke: new Stroke({ color: colors.hoverStroke, width: 3 }),
-        image: new Circle({
-          radius: 7,
-          fill: new Fill({ color: colors.hoverStroke }),
-          stroke: new Stroke({ color: colors.outline, width: 2 }),
-        }),
-        zIndex: 1,
-      }),
-    [colors],
+  const isMarker = useCallback(
+    (f: FeatureLike | undefined) =>
+      f instanceof Feature && !!markerLayer?.getSource()?.hasFeature(f),
+    [markerLayer],
   );
 
-  const baseStyle = useMemo(
-    () =>
-      new Style({
-        fill: new Fill({ color: colors.fill }),
-        stroke: new Stroke({ color: colors.stroke, width: 1.25 }),
-        image: new Circle({
-          radius: 5,
-          fill: new Fill({ color: colors.stroke }),
-          stroke: new Stroke({ color: colors.outline, width: 1.5 }),
-        }),
-      }),
-    [colors],
+  // Pins and shapes each have their own title, tooltip and dialog content
+  const contentFor = useCallback(
+    (f: FeatureLike | undefined) =>
+      isMarker(f)
+        ? {
+            title: markers?.title ?? dialogTitle,
+            tooltip: markers?.render,
+            dialog: markers?.render,
+          }
+        : { title: dialogTitle, tooltip: renderTooltip, dialog: renderDialog },
+    [isMarker, markers, dialogTitle, renderTooltip, renderDialog],
   );
 
-  useGeoJsonLayer(map, data, baseStyle);
+  const highlightStyle = useCallback<StyleFunction>(
+    (f) => (isMarker(f) ? style.pinHover : style.hover),
+    [isMarker, style],
+  );
 
   // Dialog + selection state. Features are kept after closing so the dialog
   // content doesn't vanish mid-way through the close animation.
-  const renderDialog = renderDialogProp ?? renderTooltip;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<FeatureLike[]>([]);
   const selectedProps = useMemo(() => selected.map(toProps), [selected]);
   const highlighted = dialogOpen ? selected[0] : undefined;
+  const dialog = contentFor(selected[0]);
+  const hasDialog = !!renderDialog || !!markers?.render;
 
-  const handleSelect = useCallback((features: FeatureLike[]) => {
-    setSelected(features);
-    setDialogOpen(true);
-  }, []);
+  const handleSelect = useCallback(
+    (features: FeatureLike[]) => {
+      if (!contentFor(features[0]).dialog) return;
+      setSelected(features);
+      setDialogOpen(true);
+    },
+    [contentFor],
+  );
 
-  useFeatureClick(map, isTouch && !!renderDialog, handleSelect);
-
-  // Hover behaviors only apply to hover-capable pointers
+  // Interactions. Hover behaviors only apply to hover-capable pointers.
   const hoverEnabled = highlightOnHover && !isTouch;
-  useHoverHighlight(map, !!data && hoverEnabled, hoverStyle);
-  useSelectedHighlight(highlighted, hoverStyle); // GeoJSON mode
+  useFeatureClick(map, isTouch && hasDialog, handleSelect);
+  useHoverCursor(map, hoverEnabled);
+  useHoverHighlight(map, (!!data || !!markers) && hoverEnabled, highlightStyle);
+  useSelectedHighlight(highlighted, highlightStyle); // GeoJSON features and markers
   useVectorTileLayer(
     map,
     tiles,
-    baseStyle,
-    hoverStyle,
+    style.base,
+    style.hover,
     hoverEnabled,
-    highlighted?.getId(),
+    highlighted instanceof Feature ? undefined : highlighted?.getId(),
+    mainVisible,
   ); // tile mode
 
-  const [basemap] = useState(
-    () =>
-      new XYZ({
-        url: tileUrl(isDark),
-        attributions: ATTRIBUTION,
-        attributionsCollapsible: false,
-        maxZoom: 20,
-      }),
-  );
-  useEffect(() => {
-    basemap.setUrl(tileUrl(isDark));
-  }, [isDark, basemap]);
-
   const tooltipRef = useRef<HTMLDivElement | null>(null);
-  const hovered = useTooltip(map, tooltipRef, !!renderTooltip && !isTouch);
+  const tooltipEnabled = (!!renderTooltip || !!markers?.render) && !isTouch;
+  const hovered = useTooltip(map, tooltipRef, tooltipEnabled);
+  const renderHovered = hovered.length ? contentFor(hovered[0]).tooltip : null;
+  const tooltip = renderHovered?.(hovered.map(toProps));
 
   return (
     <>
@@ -162,34 +164,26 @@ export function GeoJsonMap({
         <Map ref={setMap} layers={[]}>
           <TileLayer source={basemap} />
           <View center={fromLonLat(center)} zoom={zoom} />
-          {renderTooltip && !isTouch && (
+          {tooltipEnabled && (
             <div
               ref={tooltipRef}
               className={styles.tooltip}
-              style={{ visibility: hovered.length ? "visible" : "hidden" }}
+              style={{ visibility: tooltip ? "visible" : "hidden" }}
             >
-              {hovered.length > 0 && renderTooltip(hovered)}
+              {tooltip}
             </div>
           )}
         </Map>
       </div>
 
-      {renderDialog && (
-        <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Dialog.Content
-            className={styles.dialogContent}
-            maxWidth="450px"
-            aria-describedby={undefined}
-          >
-            <Dialog.Title>{dialogTitle ?? t("map.details")}</Dialog.Title>
-            {renderDialog(selectedProps)}
-            <Flex justify="end" mt="4">
-              <Dialog.Close>
-                <Button variant="soft">{t("map.close")}</Button>
-              </Dialog.Close>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
+      {hasDialog && (
+        <FeatureDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          title={dialog.title}
+        >
+          {dialog.dialog?.(selectedProps)}
+        </FeatureDialog>
       )}
     </>
   );

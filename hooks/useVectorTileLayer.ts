@@ -19,9 +19,19 @@ export const useVectorTileLayer = (
   hoverStyle: Style,
   highlightOnHover: boolean,
   selectedId?: string | number,
+  visible = true,
 ) => {
+  const baseRef = useRef<VectorTileLayer | null>(null);
   const highlightRef = useRef<VectorTileLayer | null>(null);
   const selectedIdRef = useRef(selectedId);
+  const visibleRef = useRef(visible);
+
+  // Declared before the layer effect so recreated layers start with this value
+  useEffect(() => {
+    visibleRef.current = visible;
+    baseRef.current?.setVisible(visible);
+    highlightRef.current?.setVisible(visible);
+  }, [visible]);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
@@ -31,13 +41,18 @@ export const useVectorTileLayer = (
     if (!map || !tiles) return;
 
     const source = new PMTilesVectorSource({ url: tiles.url });
-    const base = new VectorTileLayer({ source, style });
+    const base = new VectorTileLayer({
+      source,
+      style,
+      visible: visibleRef.current,
+    });
 
     let hoveredId: string | number | undefined;
     const highlight = new VectorTileLayer({
       source,
       renderMode: "vector",
       zIndex: 10,
+      visible: visibleRef.current,
       style: (f) => {
         const id = idOf(f);
         if (id === undefined) return undefined;
@@ -47,6 +62,7 @@ export const useVectorTileLayer = (
       },
     });
 
+    baseRef.current = base;
     highlightRef.current = highlight;
 
     map.addLayer(base);
@@ -57,16 +73,19 @@ export const useVectorTileLayer = (
       if (id === hoveredId) return;
       hoveredId = id;
       highlight.changed(); // re-run the style function
-      if (targetEl) targetEl.style.cursor = id !== undefined ? "pointer" : "";
     };
 
     const onMove = (evt: { dragging: boolean; pixel: number[] }) => {
       if (!highlightOnHover) return;
       if (evt.dragging) return setHovered(undefined);
-      const [hit] = map.getFeaturesAtPixel(evt.pixel, {
-        layerFilter: (l) => l === base, // avoid hitting our own highlight layer
-      });
-      setHovered(hit ? idOf(hit) : undefined);
+      // Only the top-most feature counts, so a tile under an overlaid marker
+      // isn't highlighted along with it
+      const top = map.forEachFeatureAtPixel(
+        evt.pixel,
+        (feature, layer) => ({ feature, layer }),
+        { layerFilter: (l) => l !== highlight }, // skip our own highlight layer
+      );
+      setHovered(top?.layer === base ? idOf(top.feature) : undefined);
     };
     const onLeave = () => setHovered(undefined);
 
@@ -78,7 +97,7 @@ export const useVectorTileLayer = (
       targetEl?.removeEventListener("pointerleave", onLeave);
       map.removeLayer(base);
       map.removeLayer(highlight);
-      if (targetEl) targetEl.style.cursor = "";
+      baseRef.current = null;
       highlightRef.current = null;
     };
   }, [map, tiles, style, hoverStyle, highlightOnHover]);
