@@ -1,16 +1,16 @@
 .mapContainer {
   position: relative;
-  width: 100%;
+  inline-size: 100%;
   /* Size from width, not vh: mobile toolbars resize the viewport while
      scrolling, and a vh-based height shifts the page under the scroll */
   aspect-ratio: 1;
-  max-height: 600px;
+  max-block-size: 600px;
 }
 
 .mapContainer :global(.ol-map) {
   position: relative;
-  height: 100%;
-  width: 100%;
+  block-size: 100%;
+  inline-size: 100%;
   border-radius: inherit;
   /* Replaced by the ring below */
   outline: none;
@@ -34,7 +34,7 @@
   position: absolute;
   inset-block: var(--space-3);
   inset-inline-start: var(--space-3);
-  width: min(320px, calc(100% - 2 * var(--space-3)));
+  inline-size: min(320px, calc(100% - 2 * var(--space-3)));
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -50,11 +50,25 @@
 
 .panelBody {
   flex: 1;
-  min-height: 0;
+  min-block-size: 0;
+}
+
+/* Below the zoom buttons, where OpenLayers puts its own zoom-to-extent
+   control. Under the tooltip and details panel. */
+.resetZoom {
+  position: absolute;
+  inset-block-start: 4.643em;
+  inset-inline-start: 0.5em;
+  z-index: 2;
+}
+
+:global(.ol-touch) .resetZoom {
+  inset-block-start: 5.5em;
 }
 
 /* Move the zoom buttons out from under the panel */
-.mapContainer:has(.panel) :global(.ol-zoom) {
+.mapContainer:has(.panel) :global(.ol-zoom),
+.mapContainer:has(.panel) .resetZoom {
   inset-inline-start: calc(
     min(320px, 100% - 2 * var(--space-3)) + 2 * var(--space-3)
   );
@@ -76,8 +90,8 @@
 .tooltip {
   position: absolute;
   display: inline-block;
-  height: auto;
-  width: auto;
+  block-size: auto;
+  inline-size: auto;
   z-index: 2;
   background-color: var(--color-panel-solid);
   border: 1px solid var(--gray-a6);
@@ -87,7 +101,9 @@
   border-radius: var(--radius-3);
   box-shadow: var(--shadow-4);
   padding: var(--space-2) var(--space-3);
-  /* Follows the pointer, set on the map element by useHoveredHit */
+  /* Follows the pointer, set on the map element by useHoveredHit. Physical
+     on purpose: the pointer's pixel position is measured from the top left
+     in any writing direction. */
   left: var(--pointer-x, 0);
   top: var(--pointer-y, 0);
   transform: translateX(3%);
@@ -98,8 +114,8 @@
    --layer-color is set by layerColorStyle. */
 .swatch {
   flex: none;
-  width: 10px;
-  height: 10px;
+  inline-size: 10px;
+  block-size: 10px;
   border-radius: var(--radius-1);
   background-color: var(--layer-color, var(--accent-9));
 }

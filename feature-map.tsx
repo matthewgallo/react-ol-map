@@ -1,4 +1,10 @@
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Callout, Skeleton } from "@radix-ui/themes";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { Map, View, TileLayer } from "react-openlayers";
@@ -21,6 +27,7 @@ import { useFeatureClick } from "./hooks/useFeatureClick";
 import { useFitSelected } from "./hooks/useFitSelected";
 import { useFullScreenControl } from "./hooks/useFullScreenControl";
 import { useHoveredHit } from "./hooks/useHoveredHit";
+import { ResetZoomButton } from "./reset-zoom-button";
 import { pickHit } from "./utils/pickHit";
 import type { Hit } from "./types";
 
@@ -40,6 +47,7 @@ export interface FeatureMapProps {
   className?: string;
   highlightOnHover?: boolean;
   fullScreen?: boolean; // show the full screen button
+  resetZoom?: boolean; // show a reset button once zoomed away from `zoom`
   children?: ReactNode; // layers: AreaLayer, MarkerLayer, InteractiveLayer
 }
 
@@ -54,6 +62,7 @@ export function FeatureMap({
   className,
   highlightOnHover = true,
   fullScreen = true,
+  resetZoom = true,
   children,
 }: FeatureMapProps) {
   const { t } = useTranslation();
@@ -61,6 +70,8 @@ export function FeatureMap({
   const [map, setMap] = useState<OLMap | null | undefined>(null);
   const basemap = useBasemap();
   useFullScreenControl(map, fullScreen, t("map.fullScreen"));
+  const [lon, lat] = center;
+  const viewCenter = useMemo(() => fromLonLat([lon, lat]), [lon, lat]);
 
   // Selection state, shown in a dialog on touch screens and a side panel
   // otherwise. The feature is kept after closing so the dialog content doesn't
@@ -166,12 +177,15 @@ export function FeatureMap({
     <FeatureMapContext value={context}>
       <div
         className={`${styles.mapContainer} ${className || ""}`.trim()}
-        style={height ? { height } : undefined}
+        style={height ? { blockSize: height } : undefined}
       >
         {/* react-openlayers adds an OSM layer unless `layers` is given, which means extra layers would be rendered unintentionally */}
         <Map ref={setMap} layers={[]}>
           <TileLayer source={basemap} />
-          <View center={fromLonLat(center)} zoom={zoom} />
+          <View center={viewCenter} zoom={zoom} />
+          {resetZoom && (
+            <ResetZoomButton map={map} center={viewCenter} zoom={zoom} />
+          )}
           {/* Inside the map element, so tooltips and panels stay visible in full screen */}
           {children}
         </Map>
