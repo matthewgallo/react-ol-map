@@ -54,16 +54,39 @@
 }
 
 /* Below the zoom buttons, where OpenLayers puts its own zoom-to-extent
-   control. Under the tooltip and details panel. */
+   control, and framed and sized like them (ol.css' .ol-control and its
+   buttons). Under the tooltip and details panel. */
 .resetZoom {
+  --button-size: 1.375em;
   position: absolute;
   inset-block-start: 4.643em;
   inset-inline-start: 0.5em;
   z-index: 2;
+  padding: 1px;
+  border-radius: 4px;
+  background-color: var(--ol-subtle-background-color);
 }
 
-:global(.ol-touch) .resetZoom {
+/* OpenLayers enlarges its buttons on touch screens. It marks those with
+   .ol-touch on its viewport, a sibling of this control, not an ancestor. */
+.mapContainer:has(:global(.ol-touch)) .resetZoom {
+  --button-size: 2.0625em; /* 1.375em at OpenLayers' 1.5em touch size */
   inset-block-start: 5.5em;
+}
+
+/* Sized in the map's em, as the zoom buttons are, rather than Radix's
+   fixed button sizes */
+.resetZoom > button {
+  display: flex;
+  font-size: inherit; /* so --button-size's em is the map's */
+  inline-size: var(--button-size);
+  block-size: var(--button-size);
+  border-radius: 2px;
+}
+
+.resetZoom > button > svg {
+  inline-size: 50%;
+  block-size: 50%;
 }
 
 /* Move the zoom buttons out from under the panel */
