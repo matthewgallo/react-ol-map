@@ -212,11 +212,14 @@
 
 /* Details bottom sheet (touch screens). Its max heights match
    COLLAPSED_FRACTION and EXPANDED_GAP in hooks/useSheetDrag.ts, which sets
-   them inline, and --sheet-offset, while it's dragged. */
+   them inline, and --sheet-offset, while it's dragged. Non-modal: it has no
+   backdrop, and sits over the page's fixed header bars (z-index 3). */
 .sheet {
   position: fixed;
   inset-block-end: 0;
   inset-inline-start: 0;
+  z-index: 10;
+  max-inline-size: 450px;
   display: flex;
   flex-direction: column;
   max-block-size: 50dvh;
@@ -272,9 +275,8 @@
   overscroll-behavior: contain;
 }
 
-/* Slides up from, and back down past, the bottom edge, in place of Radix's
-   fade and scale. Closing starts from wherever a swipe let go of it. Under
-   160ms: the overlay, which holds the sheet, unmounts after its own. */
+/* Slides up from, and back down past, the bottom edge. Closing starts from
+   wherever a swipe let go of it; the sheet unmounts once it ends. */
 @media (prefers-reduced-motion: no-preference) {
   .sheet[data-state="open"] {
     animation: sheetIn 300ms cubic-bezier(0.16, 1, 0.3, 1);

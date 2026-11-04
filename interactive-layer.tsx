@@ -130,7 +130,7 @@ function FeatureDetails({
   color: MapColor;
   children: ReactNode;
 }) {
-  const { isTouch, panelRef, closeDetails } = useFeatureMap();
+  const { map, isTouch, panelRef, closeDetails } = useFeatureMap();
 
   if (isTouch) {
     return (
@@ -139,6 +139,10 @@ function FeatureDetails({
         onOpenChange={(next) => !next && closeDetails()}
         title={title}
         color={color}
+        // The map's own clicks select another feature or close it
+        ignoreTapsIn={map?.getTargetElement()}
+        // Only while open: another layer's sheet may be closing as it opens
+        sheetRef={open ? panelRef : undefined}
       >
         {children}
       </FeatureDialog>

@@ -1,4 +1,4 @@
-import { createContext, useContext, type RefObject } from "react";
+import { createContext, useContext, type RefCallback } from "react";
 import type OLMap from "ol/Map";
 import type { FeatureLike } from "ol/Feature";
 import type { Extent } from "ol/extent";
@@ -27,7 +27,8 @@ export interface FeatureMapContextValue {
   // A layer's features drawn in the current view, once each. Tile features
   // only exist once their tiles render (see useLayerFeatures).
   featuresOf: (layerId: string) => FeatureLike[];
-  panelRef: RefObject<HTMLElement | null>; // the open side panel, if any
+  // the open side panel or bottom sheet, if any
+  panelRef: RefCallback<HTMLElement>;
   // Returns a function that unregisters the layer
   register: (id: string, layer: LayerRegistration) => () => void;
   setStatus: (id: string, status: LayerStatus | undefined) => void;

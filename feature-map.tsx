@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { Callout, Skeleton } from "@radix-ui/themes";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { Map, View, TileLayer } from "react-openlayers";
@@ -30,6 +24,7 @@ import { useHoveredHit } from "./hooks/useHoveredHit";
 import { ResetViewButton } from "./reset-view-button";
 import { featuresInView } from "./utils/featuresInView";
 import { pickHit } from "./utils/pickHit";
+import { scrollMapAboveSheet } from "./utils/scrollMapAboveSheet";
 import type { Hit } from "./types";
 
 import "react-openlayers/dist/index.css";
@@ -37,6 +32,8 @@ import styles from "./map.module.css";
 
 // Space kept clear around a selected feature when zooming to it
 const FIT_PADDING = 48;
+// Smallest height left to fit a selection into, however much is covered
+const MIN_FIT_HEIGHT = 64;
 
 // Clicks reach a little past a feature's edge, for small or thin features
 const CLICK_TOLERANCE = 6;
@@ -161,19 +158,44 @@ export function FeatureMap({
   }, []);
   useFeatureClick(map, clickHitAt, handleClick);
 
-  // Zoom to the selection, keeping it clear of the side panel
-  const panelRef = useRef<HTMLElement | null>(null);
+  // Zoom to the selection, keeping it clear of the side panel. On touch
+  // screens, first scroll the map above the bottom sheet, then keep the
+  // selection clear of what of the map the sheet and page header still cover.
+  // The open panel or sheet. Kept as state too, since a reopened sheet can
+  // mount a render after the selection: the zoom waits for it on touch screens.
+  const panelElement = useRef<HTMLElement | null>(null);
+  const [panel, setPanel] = useState<HTMLElement | null>(null);
+  const panelRef = useCallback((element: HTMLElement | null) => {
+    panelElement.current = element;
+    setPanel(element);
+  }, []);
   const extentOf = useCallback(
     ({ layerId, feature }: Hit) =>
       layers.current.get(layerId)?.extentOf(feature),
     [],
   );
   const fitPadding = useCallback(() => {
-    const panelWidth = panelRef.current?.offsetWidth ?? 0;
-    return [FIT_PADDING, FIT_PADDING, FIT_PADDING, FIT_PADDING + panelWidth];
-  }, []);
+    const panel = panelElement.current;
+    const mapElement = map?.getTargetElement();
+    if (!isTouch || !panel || !mapElement) {
+      const panelWidth = panel?.offsetWidth ?? 0;
+      return [FIT_PADDING, FIT_PADDING, FIT_PADDING, FIT_PADDING + panelWidth];
+    }
+    const { coveredTop, coveredBottom } = scrollMapAboveSheet(
+      mapElement,
+      panel.offsetHeight,
+    );
+    // Leave at least a strip of the map to fit into
+    const spare = Math.max(
+      0,
+      mapElement.offsetHeight - 2 * FIT_PADDING - MIN_FIT_HEIGHT,
+    );
+    const top = Math.min(coveredTop, spare);
+    const bottom = Math.min(coveredBottom, spare - top);
+    return [FIT_PADDING + top, FIT_PADDING, FIT_PADDING + bottom, FIT_PADDING];
+  }, [isTouch, map]);
   const openHit = selection?.open ? selection.hit : undefined;
-  useFitSelected(map, openHit, extentOf, fitPadding);
+  useFitSelected(map, openHit, extentOf, fitPadding, !isTouch || !!panel);
 
   // The panel handles Escape itself while focused. Touch screens use the
   // dialog, which closes on Escape already.

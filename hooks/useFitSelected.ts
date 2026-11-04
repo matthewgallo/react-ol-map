@@ -11,12 +11,14 @@ const CONTEXT_SCALE = 2;
 
 // Animates the view to fit the selected feature, leaving `padding` (top,
 // right, bottom, left in pixels) clear for UI over the map. Points are only
-// centered, keeping the current zoom.
+// centered, keeping the current zoom. Waits until `ready`, for UI whose size
+// sets the padding to mount.
 export const useFitSelected = <T>(
   map: OLMap | null | undefined,
   selected: T | undefined,
   extentOf: (selected: T) => Extent | undefined,
   getPadding: () => number[],
+  ready = true,
 ) => {
   // Only a new selection refits, not a change to these callbacks
   const extentOfRef = useRef(extentOf);
@@ -27,7 +29,7 @@ export const useFitSelected = <T>(
   });
 
   useEffect(() => {
-    if (!map || !selected) return;
+    if (!map || !selected || !ready) return;
     const featureExtent = extentOfRef.current(selected);
     if (!featureExtent) return;
     const extent = [...featureExtent];
@@ -44,5 +46,5 @@ export const useFitSelected = <T>(
       maxZoom: isPoint ? view.getZoom() : MAX_ZOOM,
       duration: reduceMotion ? 0 : DURATION,
     });
-  }, [map, selected]);
+  }, [map, selected, ready]);
 };

@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { createEvent, fireEvent, render, screen } from "@testing-library/react";
+import {
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { FeatureDialog } from "./feature-dialog";
 
 const renderSheet = (onOpenChange = vi.fn()) => {
@@ -77,4 +83,86 @@ describe("FeatureDialog", () => {
     expect(sheet.style.getPropertyValue("--sheet-offset")).toBe("60px");
     expect(sheet).toHaveAttribute("data-dragging");
   });
+
+  it("closes on a tap elsewhere on the page", () => {
+    const { onOpenChange } = renderSheet();
+    tap(document.body, 0);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("stays open while the page is scrolled", () => {
+    const { onOpenChange } = renderSheet();
+    tap(document.body, 80);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("stays open on taps in the sheet and the map", () => {
+    const map = document.body.appendChild(document.createElement("div"));
+    const onOpenChange = vi.fn();
+    render(
+      <FeatureDialog open onOpenChange={onOpenChange} ignoreTapsIn={map}>
+        <p>Content</p>
+      </FeatureDialog>,
+    );
+    tap(screen.getByText("Content"), 0);
+    tap(map, 0);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    map.remove();
+  });
+
+  it("leaves the page scrollable, with room below for the sheet", () => {
+    renderSheet();
+    expect(document.body).not.toHaveStyle({ overflow: "hidden" });
+    expect(
+      document.documentElement.style.getPropertyValue("--sheet-inset"),
+    ).not.toBe("");
+  });
+
+  it("makes room below the page again when reopened after closing", async () => {
+    const sheet = (open: boolean) => (
+      <FeatureDialog open={open} onOpenChange={vi.fn()} title="Landmarks">
+        <p>Content</p>
+      </FeatureDialog>
+    );
+    const { rerender } = render(sheet(true));
+    rerender(sheet(false));
+    expect(screen.queryByText("Content")).toBeNull();
+    await waitFor(() => expect(inset()).toBe(""));
+    // The sheet now mounts a render after it opens
+    rerender(sheet(true));
+    expect(inset()).not.toBe("");
+  });
+
+  it("keeps the room below the page as another layer's sheet replaces it", async () => {
+    const remove = vi.spyOn(document.documentElement.style, "removeProperty");
+    const sheets = (first: boolean) => (
+      <>
+        {first && (
+          <FeatureDialog open onOpenChange={vi.fn()} title="County">
+            <p>County</p>
+          </FeatureDialog>
+        )}
+        {!first && (
+          <FeatureDialog open onOpenChange={vi.fn()} title="Divisions">
+            <p>Division</p>
+          </FeatureDialog>
+        )}
+      </>
+    );
+    const { rerender } = render(sheets(true));
+    rerender(sheets(false));
+    await Promise.resolve();
+    expect(remove).not.toHaveBeenCalledWith("--sheet-inset");
+    expect(inset()).not.toBe("");
+    remove.mockRestore();
+  });
 });
+
+const inset = () =>
+  document.documentElement.style.getPropertyValue("--sheet-inset");
+
+// A primary pointer pressed on `el` and released `dy` px lower
+const tap = (el: Element, dy: number) => {
+  fireEvent.pointerDown(el, { isPrimary: true, clientX: 0, clientY: 100 });
+  fireEvent.pointerUp(el, { isPrimary: true, clientX: 0, clientY: 100 + dy });
+};

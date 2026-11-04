@@ -1,4 +1,4 @@
-import { createRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import Feature from "ol/Feature";
@@ -48,7 +48,7 @@ const setup = ({ isTouch = false } = {}) => {
     closeDetails,
     select: vi.fn(),
     featuresOf: () => [],
-    panelRef: createRef(),
+    panelRef: vi.fn(),
     register,
     setStatus: vi.fn(),
     ...state,
