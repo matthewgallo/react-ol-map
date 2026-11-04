@@ -1,5 +1,7 @@
 import type { ComponentType } from "react";
 import type { ThemeColors } from "./hooks/useThemeColors";
+import { HALO_DARK, HALO_EDGE, HALO_LIGHT, HALO_WIDTH } from "./utils/halo";
+import { HEIGHT, PAD, PATH, WIDTH } from "./utils/pinGeometry";
 
 export interface PinProps {
   hovered: boolean; // hovered, or selected while its dialog is open
@@ -17,14 +19,35 @@ export function DefaultPin({
   color = hovered ? colors.hoverStroke : colors.stroke,
 }: PinProps & { color?: string }) {
   return (
-    <svg width="24" height="32" viewBox="0 0 24 32">
+    <svg
+      width={WIDTH + 2 * PAD}
+      height={HEIGHT + 2 * PAD}
+      viewBox={`${-PAD} ${-PAD} ${WIDTH + 2 * PAD} ${HEIGHT + 2 * PAD}`}
+    >
+      {hovered && (
+        <path
+          d={PATH}
+          fill="none"
+          stroke={HALO_DARK}
+          strokeWidth={HALO_WIDTH + 2 * HALO_EDGE}
+          strokeLinejoin="round"
+        />
+      )}
       <path
-        d="M12 1C5.9 1 1 5.9 1 12c0 8.3 11 19 11 19s11-10.7 11-19C23 5.9 18.1 1 12 1z"
+        d={PATH}
         fill={color}
-        stroke={colors.outline}
-        strokeWidth="2"
+        stroke={hovered ? HALO_LIGHT : colors.outline}
+        strokeWidth={hovered ? HALO_WIDTH : 2}
+        strokeLinejoin="round"
       />
-      <circle cx="12" cy="12" r="4" fill={colors.outline} />
+      <circle
+        cx="12"
+        cy="12"
+        r="4"
+        fill={hovered ? HALO_LIGHT : colors.outline}
+        stroke={hovered ? HALO_DARK : undefined}
+        strokeWidth={HALO_EDGE}
+      />
     </svg>
   );
 }

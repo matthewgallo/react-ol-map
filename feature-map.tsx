@@ -27,7 +27,7 @@ import { useFeatureClick } from "./hooks/useFeatureClick";
 import { useFitSelected } from "./hooks/useFitSelected";
 import { useFullScreenControl } from "./hooks/useFullScreenControl";
 import { useHoveredHit } from "./hooks/useHoveredHit";
-import { ResetZoomButton } from "./reset-zoom-button";
+import { ResetViewButton } from "./reset-view-button";
 import { pickHit } from "./utils/pickHit";
 import type { Hit } from "./types";
 
@@ -47,7 +47,8 @@ export interface FeatureMapProps {
   className?: string;
   highlightOnHover?: boolean;
   fullScreen?: boolean; // show the full screen button
-  resetZoom?: boolean; // show a reset button once zoomed away from `zoom`
+  // show a reset button once moved away from `center` and `zoom`
+  resetView?: boolean;
   children?: ReactNode; // layers: AreaLayer, MarkerLayer, InteractiveLayer
 }
 
@@ -62,7 +63,7 @@ export function FeatureMap({
   className,
   highlightOnHover = true,
   fullScreen = true,
-  resetZoom = true,
+  resetView = true,
   children,
 }: FeatureMapProps) {
   const { t } = useTranslation();
@@ -183,8 +184,8 @@ export function FeatureMap({
         <Map ref={setMap} layers={[]}>
           <TileLayer source={basemap} />
           <View center={viewCenter} zoom={zoom} />
-          {resetZoom && (
-            <ResetZoomButton map={map} center={viewCenter} zoom={zoom} />
+          {resetView && (
+            <ResetViewButton map={map} center={viewCenter} zoom={zoom} />
           )}
           {/* Inside the map element, so tooltips and panels stay visible in full screen */}
           {children}

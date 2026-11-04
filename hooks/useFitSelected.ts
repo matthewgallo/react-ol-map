@@ -1,10 +1,13 @@
 import { useEffect, useRef } from "react";
 import type OLMap from "ol/Map";
 import type { Extent } from "ol/extent";
-import { getHeight, getWidth } from "ol/extent";
+import { getHeight, getWidth, scaleFromCenter } from "ol/extent";
 
 const DURATION = 400;
-const MAX_ZOOM = 17; // don't zoom in further than this on small areas
+const MAX_ZOOM = 16; // don't zoom in further than this on small areas
+// Fits an area this many times its size, so it sits in some surrounding
+// context rather than filling the view (2 is about one zoom level out)
+const CONTEXT_SCALE = 2;
 
 // Animates the view to fit the selected feature, leaving `padding` (top,
 // right, bottom, left in pixels) clear for UI over the map. Points are only
@@ -25,8 +28,10 @@ export const useFitSelected = <T>(
 
   useEffect(() => {
     if (!map || !selected) return;
-    const extent = extentOfRef.current(selected);
-    if (!extent) return;
+    const featureExtent = extentOfRef.current(selected);
+    if (!featureExtent) return;
+    const extent = [...featureExtent];
+    scaleFromCenter(extent, CONTEXT_SCALE);
 
     const view = map.getView();
     const isPoint = getWidth(extent) === 0 && getHeight(extent) === 0;

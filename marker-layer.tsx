@@ -11,7 +11,7 @@ const MARKERS_Z_INDEX = 20;
 export type MarkerLayerProps = LayerProps &
   ({ data: GeoJsonData; url?: never } | { url: string; data?: never }) & {
     pin?: PinComponent; // defaults to DefaultPin; define it outside render
-    pinAnchor?: [number, number]; // point of the pin on the feature; defaults to bottom center
+    pinAnchor?: [number, number]; // point of the pin on the feature; defaults to its tip, or bottom center for a custom pin
   };
 
 // Point features drawn as pins, which take priority over the shapes beneath

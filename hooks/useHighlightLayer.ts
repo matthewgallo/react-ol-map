@@ -14,7 +14,7 @@ import { useMapLayer } from "./useMapLayer";
 export const useHighlightLayer = (
   map: OLMap | null | undefined,
   base: VectorBaseLayer | undefined,
-  style: Style,
+  style: Style[],
   zIndex: number,
   visible: boolean,
   hovered: FeatureLike | undefined,

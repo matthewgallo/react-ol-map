@@ -5,6 +5,17 @@
      scrolling, and a vh-based height shifts the page under the scroll */
   aspect-ratio: 1;
   max-block-size: 600px;
+
+  /* OpenLayers colors its controls (zoom, full screen, attribution) from
+     these, set to fixed light values on :root by ol.css. Radix tokens here
+     make them follow the light/dark appearance like the rest of the app. */
+  --ol-background-color: var(--color-panel-solid);
+  --ol-accent-background-color: var(--gray-3);
+  --ol-subtle-background-color: var(--gray-a5);
+  --ol-partial-background-color: var(--color-panel-translucent);
+  --ol-foreground-color: var(--gray-12);
+  --ol-subtle-foreground-color: var(--gray-11);
+  --ol-brand-color: var(--accent-9);
 }
 
 .mapContainer :global(.ol-map) {
@@ -62,7 +73,7 @@
 /* Below the zoom buttons, where OpenLayers puts its own zoom-to-extent
    control, and framed and sized like them (ol.css' .ol-control and its
    buttons). Under the tooltip and details panel. */
-.resetZoom {
+.resetView {
   --button-size: 1.375em;
   position: absolute;
   inset-block-start: 4.643em;
@@ -75,14 +86,14 @@
 
 /* OpenLayers enlarges its buttons on touch screens. It marks those with
    .ol-touch on its viewport, a sibling of this control, not an ancestor. */
-.mapContainer:has(:global(.ol-touch)) .resetZoom {
+.mapContainer:has(:global(.ol-touch)) .resetView {
   --button-size: 2.0625em; /* 1.375em at OpenLayers' 1.5em touch size */
   inset-block-start: 5.5em;
 }
 
 /* Sized in the map's em, as the zoom buttons are, rather than Radix's
    fixed button sizes */
-.resetZoom > button {
+.resetView > button {
   display: flex;
   font-size: inherit; /* so --button-size's em is the map's */
   inline-size: var(--button-size);
@@ -90,14 +101,14 @@
   border-radius: 2px;
 }
 
-.resetZoom > button > svg {
+.resetView > button > svg {
   inline-size: 50%;
   block-size: 50%;
 }
 
 /* Move the zoom buttons out from under the panel */
 .mapContainer:has(.panel) :global(.ol-zoom),
-.mapContainer:has(.panel) .resetZoom {
+.mapContainer:has(.panel) .resetView {
   inset-inline-start: calc(
     min(320px, 100% - 2 * var(--space-3)) + 2 * var(--space-3)
   );
@@ -120,7 +131,11 @@
   position: absolute;
   display: inline-block;
   block-size: auto;
-  inline-size: auto;
+  /* Its own width, not the room left between the pointer and the map's edge,
+     which squeezes it to a letter per line near the right edge. Capped to
+     half the map, the room it always has on the side it opens toward. */
+  inline-size: max-content;
+  max-inline-size: min(20rem, 50% - var(--space-3));
   z-index: 2;
   background-color: var(--color-panel-solid);
   border: 1px solid var(--gray-a6);
@@ -134,8 +149,16 @@
      in any writing direction. */
   left: var(--pointer-x, 0);
   top: var(--pointer-y, 0);
-  transform: translateX(3%);
+  transform: translate(var(--tooltip-dx, 3%), var(--tooltip-dy, 0%));
   pointer-events: none;
+}
+
+/* Opens toward the side of the map with more room (see useHoveredHit) */
+[data-pointer-x="right"] .tooltip {
+  --tooltip-dx: -103%;
+}
+[data-pointer-y="bottom"] .tooltip {
+  --tooltip-dy: -100%;
 }
 
 /* A square in the layer's color, before its name in the tooltip and details.

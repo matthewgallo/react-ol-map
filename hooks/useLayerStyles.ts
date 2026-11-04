@@ -2,10 +2,17 @@ import { useMemo } from "react";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style";
 import { useThemeColors } from "./useThemeColors";
 import { DefaultPin, type PinComponent } from "../pin";
+import { DEFAULT_PIN_ANCHOR } from "../utils/pinGeometry";
 import { pinToSrc } from "../utils/pinToSrc";
+import { HALO_DARK, HALO_EDGE, HALO_LIGHT, HALO_WIDTH } from "../utils/halo";
 import type { MapColor } from "../types";
 
 const HOVER_SCALE = 1.25;
+const DOT_RADIUS = 5; // a hovered dot's color, inside its rings
+
+// A filled circle, for stacking into a ringed dot
+const dot = (radius: number, color: string) =>
+  new Circle({ radius, declutterMode: "none", fill: new Fill({ color }) });
 
 // Shape styles in a Radix color that follow the light/dark appearance. Points
 // in an area layer are drawn as dots.
@@ -30,16 +37,25 @@ export const useAreaStyles = (color: MapColor = "accent") => {
           stroke: new Stroke({ color: colors.outline, width: 1.5 }),
         }),
       }),
-      hover: new Style({
-        fill: new Fill({ color: colors.hoverFill }),
-        stroke: new Stroke({ color: colors.hoverStroke, width: 3 }),
-        image: new Circle({
-          radius: 7,
-          declutterMode: "none",
-          fill: new Fill({ color: colors.hoverStroke }),
-          stroke: new Stroke({ color: colors.outline, width: 2 }),
+      // Areas and lines get the halo outline (see utils/halo). Dots get it as
+      // rings, stacked as circles from the outside in: black edge, white
+      // line, black edge, then the color.
+      hover: [
+        new Style({
+          fill: new Fill({ color: colors.hoverFill }),
+          stroke: new Stroke({
+            color: HALO_DARK,
+            width: HALO_WIDTH + 2 * HALO_EDGE,
+          }),
+          image: dot(DOT_RADIUS + 2 * HALO_EDGE + HALO_WIDTH, HALO_DARK),
         }),
-      }),
+        new Style({
+          stroke: new Stroke({ color: HALO_LIGHT, width: HALO_WIDTH }),
+          image: dot(DOT_RADIUS + HALO_EDGE + HALO_WIDTH, HALO_LIGHT),
+        }),
+        new Style({ image: dot(DOT_RADIUS + HALO_EDGE, HALO_DARK) }),
+        new Style({ image: dot(DOT_RADIUS, colors.hoverStroke) }),
+      ],
     }),
     [colors],
   );
@@ -49,11 +65,13 @@ export const useAreaStyles = (color: MapColor = "accent") => {
 // placed on the point.
 export const usePinStyles = (
   Pin: PinComponent = DefaultPin,
-  anchor: [number, number] = [0.5, 1],
+  anchor?: [number, number],
   color: MapColor = "accent",
 ) => {
   const colors = useThemeColors(color);
-  const [anchorX, anchorY] = anchor;
+  // The default pin knows where its tip is; other pins default to bottom center
+  const [anchorX, anchorY] =
+    anchor ?? (Pin === DefaultPin ? DEFAULT_PIN_ANCHOR : [0.5, 1]);
 
   return useMemo(() => {
     const icon = (hovered: boolean) =>
@@ -64,7 +82,7 @@ export const usePinStyles = (
       });
     return {
       base: new Style({ image: icon(false) }),
-      hover: new Style({ image: icon(true) }),
+      hover: [new Style({ image: icon(true) })],
     };
   }, [colors, Pin, anchorX, anchorY]);
 };

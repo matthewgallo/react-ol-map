@@ -26,7 +26,7 @@ const featureExtent = (f: FeatureLike): Extent | undefined =>
 
 export interface InteractiveLayerProps extends LayerProps {
   layer: VectorBaseLayer | undefined; // undefined while its data loads
-  hoverStyle: Style; // for hovered and selected features
+  hoverStyle: Style[]; // for hovered and selected features, drawn in order
   // Extent to zoom to when a feature is selected; defaults to its geometry's
   extentOf?: (feature: FeatureLike) => Extent | undefined;
 }
