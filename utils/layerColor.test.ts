@@ -14,4 +14,10 @@ describe("layerColorStyle", () => {
   it("defaults to the theme's accent color", () => {
     expect(layerColor(layerColorStyle())).toBe("var(--accent-9)");
   });
+
+  // An alpha step, so the panel shows through it in light and dark
+  it("sets a soft tint of the same scale", () => {
+    const style = layerColorStyle("blue") as Record<string, string>;
+    expect(style["--layer-tint"]).toBe("var(--blue-a3)");
+  });
 });

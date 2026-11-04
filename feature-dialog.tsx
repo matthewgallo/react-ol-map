@@ -60,11 +60,13 @@ export function FeatureDialog({
         // Portal into the fullscreen element, or the dialog opens behind it
         container={fullscreenElement}
       >
-        <div className={styles.sheetHandle} aria-hidden />
-        <Dialog.Title className={styles.layerTitle}>
-          <span className={styles.swatch} aria-hidden />
-          {title ?? t("map.details")}
-        </Dialog.Title>
+        <div className={`${styles.detailsHeader} ${styles.sheetHeader}`}>
+          <div className={styles.sheetHandle} aria-hidden />
+          <Dialog.Title className={styles.layerTitle} mb="0">
+            <span className={styles.swatch} aria-hidden />
+            {title ?? t("map.details")}
+          </Dialog.Title>
+        </div>
         <div ref={bodyRef} className={styles.sheetBody}>
           {children}
         </div>

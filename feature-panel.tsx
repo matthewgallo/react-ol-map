@@ -80,7 +80,13 @@ export function FeaturePanel({
       style={layerColorStyle(color)}
       aria-labelledby={titleId}
     >
-      <Flex justify="between" align="center" gap="2" p="3">
+      <Flex
+        justify="between"
+        align="center"
+        gap="2"
+        p="3"
+        className={styles.detailsHeader}
+      >
         <Heading as="h3" size="3" id={titleId} className={styles.layerTitle}>
           <span className={styles.swatch} aria-hidden />
           {title ?? t("map.details")}
@@ -100,7 +106,7 @@ export function FeaturePanel({
         scrollbars="vertical"
         className={styles.panelBody}
       >
-        <Box px="3" pb="3">
+        <Box p="3">
           {children}
         </Box>
       </ScrollArea>
