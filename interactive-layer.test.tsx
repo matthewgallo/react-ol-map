@@ -18,7 +18,7 @@ import type { FeatureProps, Hit, VectorBaseLayer } from "./types";
 
 import styles from "./map.module.css";
 
-const hoverStyle = new Style();
+const hoverStyle = [new Style()];
 const makeLayer = () => new VectorLayer({ source: new VectorSource() });
 const feature = (name: string) => new Feature({ name });
 
