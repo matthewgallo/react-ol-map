@@ -23,6 +23,10 @@ export const useHoveredHit = (
   useEffect(() => {
     const targetEl = map?.getTargetElement();
     if (!map || !targetEl || !enabled) return;
+    // OpenLayers only sends pointermove from its viewport, so leaving it for
+    // UI overlaid on the map (the details panel) must clear the hover, or the
+    // pointer cursor and tooltip stay up over that UI
+    const viewportEl = map.getViewport();
 
     const update = (next: Hit | undefined) => {
       targetEl.style.cursor = next ? "pointer" : "";
@@ -42,11 +46,11 @@ export const useHoveredHit = (
 
     map.on("pointermove", onMove);
     map.on("click", onMove);
-    targetEl.addEventListener("pointerleave", onLeave);
+    viewportEl?.addEventListener("pointerleave", onLeave);
     return () => {
       map.un("pointermove", onMove);
       map.un("click", onMove);
-      targetEl.removeEventListener("pointerleave", onLeave);
+      viewportEl?.removeEventListener("pointerleave", onLeave);
       update(undefined);
     };
   }, [map, enabled, hitAt]);
