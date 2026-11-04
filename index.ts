@@ -6,10 +6,13 @@ export {
   type InteractiveLayerProps,
 } from "./interactive-layer";
 export { useFeatureMap } from "./context";
+export { useLastSelected } from "./hooks/useLastSelected";
+export { useLayerFeatures } from "./hooks/useLayerFeatures";
 export type { TileConfig } from "./hooks/useVectorTileLayer";
 export type {
   FeatureProps,
   GeoJsonData,
+  Hit,
   LayerProps,
   MapColor,
   Render,

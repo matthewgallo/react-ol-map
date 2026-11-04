@@ -21,6 +21,12 @@ export interface FeatureMapContextValue {
   selected: Hit | undefined; // kept after closing, for the close animation
   detailsOpen: boolean;
   closeDetails: () => void;
+  // Opens a feature's details, as clicking it would. Use it to move between
+  // related features from within details content.
+  select: (hit: Hit) => void;
+  // A layer's features drawn in the current view, once each. Tile features
+  // only exist once their tiles render (see useLayerFeatures).
+  featuresOf: (layerId: string) => FeatureLike[];
   panelRef: RefObject<HTMLElement | null>; // the open side panel, if any
   // Returns a function that unregisters the layer
   register: (id: string, layer: LayerRegistration) => () => void;

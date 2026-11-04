@@ -26,6 +26,9 @@ export interface Hit {
 
 // Options shared by every layer component
 export interface LayerProps {
+  // Names the layer in the map's hover and selection (Hit.layerId), for
+  // components that act on them. Unique within the map; generated if unset.
+  id?: string;
   title?: string; // details heading when one of its features is selected
   renderTooltip?: Render; // shown on hover
   renderDialog?: Render; // shown on click; defaults to renderTooltip

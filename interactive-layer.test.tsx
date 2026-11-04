@@ -46,6 +46,8 @@ const setup = ({ isTouch = false } = {}) => {
     selected: undefined,
     detailsOpen: false,
     closeDetails,
+    select: vi.fn(),
+    featuresOf: () => [],
     panelRef: createRef(),
     register,
     setStatus: vi.fn(),

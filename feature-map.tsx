@@ -28,6 +28,7 @@ import { useFitSelected } from "./hooks/useFitSelected";
 import { useFullScreenControl } from "./hooks/useFullScreenControl";
 import { useHoveredHit } from "./hooks/useHoveredHit";
 import { ResetViewButton } from "./reset-view-button";
+import { featuresInView } from "./utils/featuresInView";
 import { pickHit } from "./utils/pickHit";
 import type { Hit } from "./types";
 
@@ -132,6 +133,23 @@ export function FeatureMap({
     [hitAt],
   );
 
+  // Opens a feature's details from outside the map, such as a link between
+  // features in details content
+  const select = useCallback((hit: Hit) => {
+    if (layers.current.get(hit.layerId)?.hasDetails) {
+      setSelection({ hit, open: true });
+    }
+  }, []);
+  const featuresOf = useCallback(
+    (layerId: string) => {
+      const layer = layers.current.get(layerId)?.layer;
+      const size = map?.getSize();
+      if (!map || !layer || !size) return [];
+      return featuresInView(layer, map.getView().calculateExtent(size));
+    },
+    [map],
+  );
+
   // Interactions. Hover only applies to hover-capable pointers.
   const hovered = useHoveredHit(map, !isTouch, hitAt);
   const handleClick = useCallback((hit: Hit | undefined) => {
@@ -169,6 +187,8 @@ export function FeatureMap({
     selected: selection?.hit,
     detailsOpen: !!selection?.open,
     closeDetails,
+    select,
+    featuresOf,
     panelRef,
     register,
     setStatus,

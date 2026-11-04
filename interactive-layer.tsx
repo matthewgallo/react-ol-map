@@ -37,6 +37,7 @@ export interface InteractiveLayerProps extends LayerProps {
 // layers can be stacked, each with its own. Use it directly for a layer type
 // AreaLayer and MarkerLayer don't cover.
 export function InteractiveLayer({
+  id: idProp,
   layer,
   hoverStyle,
   extentOf = featureExtent,
@@ -48,7 +49,8 @@ export function InteractiveLayer({
   zIndex = 0,
   color = "accent",
 }: InteractiveLayerProps) {
-  const id = useId();
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
   const {
     map,
     register,
