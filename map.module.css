@@ -43,6 +43,9 @@
 
 .panel {
   position: absolute;
+  /* Which way the inline start is on screen, for panelIn's slide, since
+     translate has no logical form */
+  --inline-sign: 1;
   inset-block: var(--space-3);
   inset-inline-start: var(--space-3);
   inline-size: min(320px, calc(100% - 2 * var(--space-3)));
@@ -114,10 +117,15 @@
   );
 }
 
+.panel:dir(rtl) {
+  --inline-sign: -1;
+}
+
 @keyframes panelIn {
   from {
     opacity: 0;
-    transform: translateX(-8px);
+    /* From the inline start, where the panel sits */
+    transform: translateX(calc(-8px * var(--inline-sign, 1)));
   }
 }
 
@@ -133,9 +141,10 @@
   block-size: auto;
   /* Its own width, not the room left between the pointer and the map's edge,
      which squeezes it to a letter per line near the right edge. Capped to
-     half the map, the room it always has on the side it opens toward. */
+     half the map (cqi, as % would be of its position area below), so it
+     always fits on one side of the pointer or the other. */
   inline-size: max-content;
-  max-inline-size: min(20rem, 50% - var(--space-3));
+  max-inline-size: min(20rem, 50cqi - var(--space-3));
   z-index: 2;
   background-color: var(--color-panel-solid);
   border: 1px solid var(--gray-a6);
@@ -143,22 +152,59 @@
   border-radius: var(--radius-3);
   overflow: hidden; /* clips .tooltipTitle's band to the corners */
   box-shadow: var(--shadow-4);
-  padding: var(--space-2) var(--space-3);
-  /* Follows the pointer, set on the map element by useHoveredHit. Physical
-     on purpose: the pointer's pixel position is measured from the top left
-     in any writing direction. */
-  left: var(--pointer-x, 0);
-  top: var(--pointer-y, 0);
-  transform: translate(var(--tooltip-dx, 3%), var(--tooltip-dy, 0%));
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
   pointer-events: none;
 }
 
-/* Opens toward the side of the map with more room (see useHoveredHit) */
-[data-pointer-x="right"] .tooltip {
-  --tooltip-dx: -103%;
+/* Sizes the tooltip's cap (cqi) from the map, and keeps each map's pointer
+   anchor to itself when a page has several */
+.mapContainer :global(.ol-map) {
+  container-type: inline-size;
+  anchor-scope: --map-pointer;
 }
-[data-pointer-y="bottom"] .tooltip {
-  --tooltip-dy: -100%;
+
+/* A point following the pointer, from --pointer-x/--pointer-y set on the map
+   element by useHoveredHit. Physical on purpose: the pointer's pixel position
+   is measured from the top left in any writing direction. */
+.pointerAnchor {
+  position: absolute;
+  left: var(--pointer-x, 0);
+  top: var(--pointer-y, 0);
+  anchor-name: --map-pointer;
+  pointer-events: none;
+}
+
+/* Opens after the pointer in both directions (below and to the right, in
+   English and Spanish), and flips to the other side only when it would
+   otherwise run past the map's edge. The browser keeps the
+   last position that fit, so it doesn't jump back and forth as you move. */
+@supports (position-area: block-end inline-end) {
+  .tooltip {
+    position-anchor: --map-pointer;
+    position-area: block-end inline-end;
+    position-try-fallbacks:
+      flip-inline,
+      flip-block,
+      flip-block flip-inline;
+    margin: var(--space-2);
+  }
+}
+
+/* Without anchor positioning: opens toward the half of the map with more
+   room (see useHoveredHit) */
+@supports not (position-area: block-end inline-end) {
+  .tooltip {
+    left: var(--pointer-x, 0);
+    top: var(--pointer-y, 0);
+    transform: translate(var(--tooltip-dx, 3%), var(--tooltip-dy, 0%));
+  }
+  [data-pointer-x="right"] .tooltip {
+    --tooltip-dx: -103%;
+  }
+  [data-pointer-y="bottom"] .tooltip {
+    --tooltip-dy: -100%;
+  }
 }
 
 /* A square in the layer's color, before its name in the tooltip and details.
@@ -185,8 +231,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-3)) var(--space-2);
-  padding: var(--space-1) var(--space-3);
+  margin-block: calc(-1 * var(--space-2)) var(--space-2);
+  margin-inline: calc(-1 * var(--space-3));
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
   background-color: var(--layer-tint, var(--accent-a3));
   border-block-end: 1px solid var(--gray-a4);
   font-size: var(--font-size-1);
@@ -232,6 +280,7 @@
   );
   border-end-start-radius: 0;
   border-end-end-radius: 0;
+  /* Physical, like the swipe that drags it (clientY in useSheetDrag) */
   transform: translateY(var(--sheet-offset, 0px));
   transition:
     max-block-size 250ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -253,7 +302,8 @@
   flex-direction: column;
   margin-inline: calc(-1 * var(--dialog-content-padding));
   margin-block-end: var(--space-4);
-  padding: var(--space-2) var(--dialog-content-padding) var(--space-4);
+  padding-block: var(--space-2) var(--space-4);
+  padding-inline: var(--dialog-content-padding);
 }
 
 /* Grabber, hinting that the sheet can be swiped */
@@ -270,6 +320,7 @@
 .sheetBody {
   flex: 1;
   min-block-size: 0;
+  /* overflow-block isn't supported in Chrome or Safari yet */
   overflow-y: auto;
   /* Keep scrolls at its ends from moving the page behind */
   overscroll-behavior: contain;

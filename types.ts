@@ -39,6 +39,10 @@ export interface LayerProps {
   // Higher draws on top. Layers with the same zIndex draw in the order they
   // were added, so set it when the order matters.
   zIndex?: number;
+  // zIndex of the hovered and selected highlight. Defaults to 10 above
+  // zIndex, over the other area layers; set it lower to keep layers drawn
+  // within this one's areas (such as a county's divisions) above it.
+  highlightZIndex?: number;
   color?: MapColor;
 }
 

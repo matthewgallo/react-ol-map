@@ -12,9 +12,11 @@ const isOverControl = (evt: MapBrowserEvent) =>
 // Tracks the top-most feature under the pointer, shared by every layer for
 // hover highlights and tooltips. Also shows a pointer cursor over features,
 // and exposes the pointer position as --pointer-x/--pointer-y on the map
-// element for tooltips to follow, with data-pointer-x ("left" or "right") and
-// data-pointer-y ("top" or "bottom") naming the half of the map it's in, so a
-// tooltip can open toward the side with more room.
+// element for tooltips to follow. Tooltips are anchored to it and flip away
+// from the map's edges where anchor positioning is supported. Otherwise they
+// use data-pointer-x ("left" or "right") and data-pointer-y ("top" or
+// "bottom"), naming the half of the map the pointer is in, to open toward the
+// side with more room.
 export const useHoveredHit = (
   map: OLMap | null | undefined,
   enabled: boolean,

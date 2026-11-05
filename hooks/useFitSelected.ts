@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 import type OLMap from "ol/Map";
 import type { Extent } from "ol/extent";
 import { getHeight, getWidth, scaleFromCenter } from "ol/extent";
+import { VIEW_ANIMATION_DURATION, easeOutCubic } from "../animation";
 
-const DURATION = 400;
 const MAX_ZOOM = 16; // don't zoom in further than this on small areas
 // Fits an area this many times its size, so it sits in some surrounding
 // context rather than filling the view (2 is about one zoom level out)
@@ -44,7 +44,8 @@ export const useFitSelected = <T>(
     view.fit(extent, {
       padding: getPaddingRef.current(),
       maxZoom: isPoint ? view.getZoom() : MAX_ZOOM,
-      duration: reduceMotion ? 0 : DURATION,
+      duration: reduceMotion ? 0 : VIEW_ANIMATION_DURATION,
+      easing: easeOutCubic,
     });
   }, [map, selected, ready]);
 };

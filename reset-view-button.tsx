@@ -4,10 +4,9 @@ import { useTranslation } from "react-i18next";
 import type OLMap from "ol/Map";
 import type { Coordinate } from "ol/coordinate";
 import { useViewChanged } from "./hooks/useViewChanged";
+import { VIEW_ANIMATION_DURATION, easeOutCubic } from "./animation";
 
 import styles from "./map.module.css";
-
-const DURATION = 400;
 
 interface ResetViewButtonProps {
   map: OLMap | null | undefined;
@@ -26,9 +25,12 @@ export function ResetViewButton({ map, center, zoom }: ResetViewButtonProps) {
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    map
-      .getView()
-      .animate({ center, zoom, duration: reduceMotion ? 0 : DURATION });
+    map.getView().animate({
+      center,
+      zoom,
+      duration: reduceMotion ? 0 : VIEW_ANIMATION_DURATION,
+      easing: easeOutCubic,
+    });
     // The button goes away once reset, so keep focus on the map rather than
     // losing it to the page
     map.getTargetElement()?.focus();

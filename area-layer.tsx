@@ -22,7 +22,11 @@ type AreaSource =
   | { url: string; data?: never; tiles?: never }
   | { tiles: TileConfig; data?: never; url?: never };
 
-export type AreaLayerProps = LayerProps & AreaSource;
+export type AreaLayerProps = LayerProps &
+  AreaSource & {
+    // Drawn within another layer's areas: a stronger fill and border
+    nested?: boolean;
+  };
 
 type Styles = ReturnType<typeof useAreaStyles>;
 type SourceLayerProps = Omit<InteractiveLayerProps, "layer" | "hoverStyle"> & {
@@ -31,8 +35,15 @@ type SourceLayerProps = Omit<InteractiveLayerProps, "layer" | "hoverStyle"> & {
 
 // Shapes (polygons and lines; points draw as dots) filled in `color`. Stack
 // several in one FeatureMap, each with its own color, tooltip and details.
-export function AreaLayer({ data, url, tiles, color, ...props }: AreaLayerProps) {
-  const styles = useAreaStyles(color);
+export function AreaLayer({
+  data,
+  url,
+  tiles,
+  color,
+  nested,
+  ...props
+}: AreaLayerProps) {
+  const styles = useAreaStyles(color, nested);
   return tiles ? (
     <TileAreas url={tiles.url} styles={styles} color={color} {...props} />
   ) : (

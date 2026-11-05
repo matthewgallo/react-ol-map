@@ -5,6 +5,7 @@ import type { MapColor } from "../types";
 // scale (e.g. --accent-9, --blue-9)
 const STEPS = {
   fill: "a4",
+  nestedFill: "a5",
   stroke: "9",
   hoverFill: "a6",
   hoverStroke: "11",
@@ -22,6 +23,7 @@ export type ThemeColors = Record<keyof typeof STEPS | "outline", string>;
 // light)
 const FALLBACK: ThemeColors = {
   fill: "rgba(229, 77, 46, 0.2)",
+  nestedFill: "rgba(229, 77, 46, 0.3)",
   stroke: "#e54d2e",
   hoverFill: "rgba(229, 77, 46, 0.4)",
   hoverStroke: "#d13415",

@@ -47,6 +47,7 @@ export function InteractiveLayer({
   visible = true,
   interactive = true,
   zIndex = 0,
+  highlightZIndex = zIndex + HIGHLIGHT_Z_OFFSET,
   color = "accent",
 }: InteractiveLayerProps) {
   const generatedId = useId();
@@ -78,7 +79,7 @@ export function InteractiveLayer({
     map,
     layer,
     hoverStyle,
-    zIndex + HIGHLIGHT_Z_OFFSET,
+    highlightZIndex,
     visible,
     highlightOnHover ? ownHovered : undefined,
     open ? ownSelected : undefined,

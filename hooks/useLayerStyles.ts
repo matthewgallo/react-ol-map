@@ -15,21 +15,22 @@ const dot = (radius: number, color: string) =>
   new Circle({ radius, declutterMode: "none", fill: new Fill({ color }) });
 
 // Shape styles in a Radix color that follow the light/dark appearance. Points
-// in an area layer are drawn as dots.
+// in an area layer are drawn as dots. `nested` areas, drawn within another
+// layer's, get a stronger fill and border to stand out from it and each other.
 //
 // The dots set declutterMode "none" so they can be hovered and clicked in
 // vector tile layers. When decluttering is off, OpenLayers (10.11) still
 // filters tile hit detection against an empty decluttered-feature list, which
 // silently drops image-styled points unless their declutterMode is "none".
 // The layers don't declutter, so this doesn't change how the dots render.
-export const useAreaStyles = (color: MapColor = "accent") => {
+export const useAreaStyles = (color: MapColor = "accent", nested = false) => {
   const colors = useThemeColors(color);
 
   return useMemo(
     () => ({
       base: new Style({
-        fill: new Fill({ color: colors.fill }),
-        stroke: new Stroke({ color: colors.stroke, width: 1.25 }),
+        fill: new Fill({ color: nested ? colors.nestedFill : colors.fill }),
+        stroke: new Stroke({ color: colors.stroke, width: nested ? 2 : 1.25 }),
         image: new Circle({
           radius: 5,
           declutterMode: "none",
@@ -57,7 +58,7 @@ export const useAreaStyles = (color: MapColor = "accent") => {
         new Style({ image: dot(DOT_RADIUS, colors.hoverStroke) }),
       ],
     }),
-    [colors],
+    [colors, nested],
   );
 };
 

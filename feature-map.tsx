@@ -20,6 +20,7 @@ import { useCloseOnEscape } from "./hooks/useCloseOnEscape";
 import { useFeatureClick } from "./hooks/useFeatureClick";
 import { useFitSelected } from "./hooks/useFitSelected";
 import { useFullScreenControl } from "./hooks/useFullScreenControl";
+import { useHomeView, type Bounds } from "./hooks/useHomeView";
 import { useHoveredHit } from "./hooks/useHoveredHit";
 import { ResetViewButton } from "./reset-view-button";
 import { featuresInView } from "./utils/featuresInView";
@@ -29,6 +30,8 @@ import type { Hit } from "./types";
 
 import "react-openlayers/dist/index.css";
 import styles from "./map.module.css";
+
+const DEFAULT_CENTER: [number, number] = [-79.0558, 35.9132];
 
 // Space kept clear around a selected feature when zooming to it
 const FIT_PADDING = 48;
@@ -41,6 +44,9 @@ const CLICK_TOLERANCE = 6;
 export interface FeatureMapProps {
   center?: [number, number];
   zoom?: number;
+  // Fitted to the map's size in place of `center` and `zoom`, so all of an
+  // area is in view however big the map is
+  bounds?: Bounds;
   height?: number;
   className?: string;
   highlightOnHover?: boolean;
@@ -55,8 +61,9 @@ export interface FeatureMapProps {
 // all layers) and which is selected (one at a time). Each layer draws its own
 // highlight, tooltip and details for its features.
 export function FeatureMap({
-  center = [-79.0558, 35.9132],
+  center,
   zoom = 11,
+  bounds,
   height,
   className,
   highlightOnHover = true,
@@ -69,8 +76,14 @@ export function FeatureMap({
   const [map, setMap] = useState<OLMap | null | undefined>(null);
   const basemap = useBasemap();
   useFullScreenControl(map, fullScreen, t("map.fullScreen"));
-  const [lon, lat] = center;
+  // Until `bounds` are fitted, start in their middle
+  const [lon, lat] =
+    center ??
+    (bounds
+      ? [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2]
+      : DEFAULT_CENTER);
   const viewCenter = useMemo(() => fromLonLat([lon, lat]), [lon, lat]);
+  const home = useHomeView(map, viewCenter, zoom, bounds);
 
   // Selection state, shown in a dialog on touch screens and a side panel
   // otherwise. The feature is kept after closing so the dialog content doesn't
@@ -227,8 +240,10 @@ export function FeatureMap({
           <TileLayer source={basemap} />
           <View center={viewCenter} zoom={zoom} />
           {resetView && (
-            <ResetViewButton map={map} center={viewCenter} zoom={zoom} />
+            <ResetViewButton map={map} center={home.center} zoom={home.zoom} />
           )}
+          {/* What tooltips are anchored to. Before them, as anchor positioning requires. */}
+          <div className={styles.pointerAnchor} aria-hidden />
           {/* Inside the map element, so tooltips and panels stay visible in full screen */}
           {children}
         </Map>

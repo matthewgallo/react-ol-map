@@ -5,6 +5,7 @@ import { pinToSrc } from "./pinToSrc";
 
 const colors: ThemeColors = {
   fill: "rgba(0, 0, 0, 0.2)",
+  nestedFill: "rgba(0, 0, 0, 0.3)",
   stroke: "#111111",
   hoverFill: "rgba(0, 0, 0, 0.4)",
   hoverStroke: "#222222",
