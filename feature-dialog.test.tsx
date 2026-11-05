@@ -114,7 +114,7 @@ describe("FeatureDialog", () => {
     renderSheet();
     expect(document.body).not.toHaveStyle({ overflow: "hidden" });
     expect(
-      document.documentElement.style.getPropertyValue("--sheet-inset"),
+      document.documentElement.style.getPropertyValue("--sheet-clearance"),
     ).not.toBe("");
   });
 
@@ -127,10 +127,10 @@ describe("FeatureDialog", () => {
     const { rerender } = render(sheet(true));
     rerender(sheet(false));
     expect(screen.queryByText("Content")).toBeNull();
-    await waitFor(() => expect(inset()).toBe(""));
+    await waitFor(() => expect(clearance()).toBe(""));
     // The sheet now mounts a render after it opens
     rerender(sheet(true));
-    expect(inset()).not.toBe("");
+    expect(clearance()).not.toBe("");
   });
 
   it("keeps the room below the page as another layer's sheet replaces it", async () => {
@@ -152,14 +152,14 @@ describe("FeatureDialog", () => {
     const { rerender } = render(sheets(true));
     rerender(sheets(false));
     await Promise.resolve();
-    expect(remove).not.toHaveBeenCalledWith("--sheet-inset");
-    expect(inset()).not.toBe("");
+    expect(remove).not.toHaveBeenCalledWith("--sheet-clearance");
+    expect(clearance()).not.toBe("");
     remove.mockRestore();
   });
 });
 
-const inset = () =>
-  document.documentElement.style.getPropertyValue("--sheet-inset");
+const clearance = () =>
+  document.documentElement.style.getPropertyValue("--sheet-clearance");
 
 // A primary pointer pressed on `el` and released `dy` px lower
 const tap = (el: Element, dy: number) => {

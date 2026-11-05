@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type Ref,
-} from "react";
+import { useCallback, useRef, useState, type ReactNode, type Ref } from "react";
 import { Dialog } from "radix-ui";
 import {
   Dialog as ThemedDialog,
@@ -17,21 +9,13 @@ import { useTranslation } from "react-i18next";
 import { useFullscreenElement } from "../../hooks/useFullscreenElement";
 
 import { useSheetDrag } from "./hooks/useSheetDrag";
+import { useCloseOnTapOutside } from "./hooks/useCloseOnTapOutside";
+import { useSheetClearance } from "./hooks/useSheetClearance";
 import type { MapColor } from "./types";
 import { layerColorStyle } from "./utils/layerColor";
 import type { SheetSnap } from "./utils/sheetSnap";
 
 import styles from "./map.module.css";
-
-// Set on <html> to the open sheet's height, which index.css adds below the
-// page so it can scroll everything above the sheet into view
-const INSET_PROPERTY = "--sheet-inset";
-// The sheet whose height it holds, of all maps' sheets
-let insetOwner: object | null = null;
-
-// A pointer that moves further than this between down and up is scrolling the
-// page, not tapping it
-const TAP_SLOP = 10;
 
 interface FeatureDialogProps {
   open: boolean;
@@ -76,11 +60,6 @@ export function FeatureDialog({
     if (open) setSnap("collapsed");
   }
 
-  const onOpenChangeRef = useRef(onOpenChange);
-  useEffect(() => {
-    onOpenChangeRef.current = onOpenChange;
-  });
-
   const dragRef = useSheetDrag({
     snap,
     bodyRef,
@@ -101,67 +80,11 @@ export function FeatureDialog({
     [dragRef],
   );
 
-  // Room below the page for the sheet. A layout effect, so it's there before
-  // the map scrolls itself above the sheet (in FeatureMap's effects).
-  useLayoutEffect(() => {
-    if (!open || !sheet) return;
-    const root = document.documentElement;
-    const owner = {};
-    insetOwner = owner;
-    const update = () =>
-      root.style.setProperty(INSET_PROPERTY, `${sheet.offsetHeight}px`);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(sheet);
-    return () => {
-      observer.disconnect();
-      // Removed once the update is done, unless another sheet took it over:
-      // selecting a feature on another layer swaps one layer's sheet for
-      // another's. Removing it in between would clamp the page's scroll,
-      // jumping the map out of view as the new sheet measures itself.
-      queueMicrotask(() => {
-        if (insetOwner !== owner) return;
-        insetOwner = null;
-        root.style.removeProperty(INSET_PROPERTY);
-      });
-    };
-  }, [open, sheet]);
+  useSheetClearance(sheet, open);
 
-  // Close on taps elsewhere on the page, but not on scrolls, which should
-  // move the page under it
-  useEffect(() => {
-    if (!open) return;
-    let start: { x: number; y: number } | null = null;
-    const outside = (target: EventTarget | null) =>
-      target instanceof Node &&
-      !sheetElement.current?.contains(target) &&
-      !ignoreTapsIn?.contains(target);
-    const onDown = (e: PointerEvent) => {
-      start =
-        e.isPrimary && outside(e.target)
-          ? { x: e.clientX, y: e.clientY }
-          : null;
-    };
-    const onUp = (e: PointerEvent) => {
-      if (
-        start &&
-        Math.hypot(e.clientX - start.x, e.clientY - start.y) <= TAP_SLOP &&
-        outside(e.target)
-      ) {
-        onOpenChangeRef.current(false);
-      }
-      start = null;
-    };
-    const onCancel = () => (start = null);
-    document.addEventListener("pointerdown", onDown, true);
-    document.addEventListener("pointerup", onUp, true);
-    document.addEventListener("pointercancel", onCancel, true);
-    return () => {
-      document.removeEventListener("pointerdown", onDown, true);
-      document.removeEventListener("pointerup", onUp, true);
-      document.removeEventListener("pointercancel", onCancel, true);
-    };
-  }, [open, ignoreTapsIn]);
+  useCloseOnTapOutside(open, sheetElement, ignoreTapsIn, () =>
+    onOpenChange(false),
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange} modal={false}>
