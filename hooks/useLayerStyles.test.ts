@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Circle } from "ol/style";
-import { useAreaStyles } from "./useLayerStyles";
+import type { Circle, Icon } from "ol/style";
+import { useAreaStyles, usePinStyles } from "./useLayerStyles";
 
 describe("useAreaStyles", () => {
   // Without it, OpenLayers' vector tile hit detection drops points drawn as
@@ -10,6 +10,16 @@ describe("useAreaStyles", () => {
     const { result } = renderHook(() => useAreaStyles());
     for (const style of [result.current.base, ...result.current.hover]) {
       expect((style.getImage() as Circle).getDeclutterMode()).toBe("none");
+    }
+  });
+});
+
+describe("usePinStyles", () => {
+  // The same hit detection issue applies to pins in a tiled MarkerLayer
+  it("keeps pins out of decluttering so tile points stay hittable", () => {
+    const { result } = renderHook(() => usePinStyles());
+    for (const style of [result.current.base, ...result.current.hover]) {
+      expect((style.getImage() as Icon).getDeclutterMode()).toBe("none");
     }
   });
 });

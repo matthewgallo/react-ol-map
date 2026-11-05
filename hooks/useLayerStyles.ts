@@ -63,7 +63,8 @@ export const useAreaStyles = (color: MapColor = "accent", nested = false) => {
 };
 
 // Pin styles rendered from `Pin`. `anchor` is the fraction of the pin image
-// placed on the point.
+// placed on the point. declutterMode "none" keeps pins hoverable and
+// clickable in vector tile layers, as for the dots in useAreaStyles.
 export const usePinStyles = (
   Pin: PinComponent = DefaultPin,
   anchor?: [number, number],
@@ -80,6 +81,7 @@ export const usePinStyles = (
         src: pinToSrc(Pin, { hovered, colors }),
         anchor: [anchorX, anchorY],
         scale: hovered ? HOVER_SCALE : 1,
+        declutterMode: "none",
       });
     return {
       base: new Style({ image: icon(false) }),
