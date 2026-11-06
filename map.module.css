@@ -217,11 +217,20 @@
   background-color: var(--layer-color, var(--accent-9));
 }
 
-/* Details heading: the layer's name after its swatch */
+/* Details heading: the layer's name after its swatch, in the home page's
+   display face (--fk-* from index.css) */
 .layerTitle {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  font-family: var(--fk-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
+  line-height: 1.25;
+  color: var(--fk-ink);
 }
 
 /* The layer a hovered feature belongs to, in a band washed in its color like

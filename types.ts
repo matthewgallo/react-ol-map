@@ -12,6 +12,9 @@ export type FeatureProps = Record<string, unknown>;
 // Tooltip and details content for the hovered or selected features
 export type Render = (features: FeatureProps[]) => ReactNode;
 
+// Whether a layer draws a feature, from its properties
+export type FeatureFilter = (props: FeatureProps) => boolean;
+
 // A Radix color scale, or "accent" to follow the theme's accent color
 export type MapColor = NonNullable<ThemeProps["accentColor"]> | "accent";
 
@@ -44,6 +47,10 @@ export interface LayerProps {
   // within this one's areas (such as a county's divisions) above it.
   highlightZIndex?: number;
   color?: MapColor;
+  // Draws only the features it accepts. The others can't be hovered or
+  // clicked, and are left out of useLayerFeatures. Define it outside render
+  // or memoize it, since a new function restyles the layer.
+  filter?: FeatureFilter;
 }
 
 export const toProps = (feature: FeatureLike): FeatureProps => {

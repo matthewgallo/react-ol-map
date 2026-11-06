@@ -10,6 +10,7 @@ export { useLastSelected } from "./hooks/useLastSelected";
 export { useLayerFeatures } from "./hooks/useLayerFeatures";
 export type { TileConfig } from "./hooks/useVectorTileLayer";
 export type {
+  FeatureFilter,
   FeatureProps,
   GeoJsonData,
   Hit,

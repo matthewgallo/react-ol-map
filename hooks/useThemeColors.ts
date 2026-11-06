@@ -19,14 +19,14 @@ const tokensFor = (color: MapColor) => [
 
 export type ThemeColors = Record<keyof typeof STEPS | "outline", string>;
 
-// Used until the Theme root is in the DOM, or for an unknown color (tomato,
-// light)
+// Used until the Theme root is in the DOM, or for an unknown color (crimson,
+// light; matches the Theme's accentColor in main.tsx)
 const FALLBACK: ThemeColors = {
-  fill: "rgba(229, 77, 46, 0.2)",
-  nestedFill: "rgba(229, 77, 46, 0.3)",
-  stroke: "#e54d2e",
-  hoverFill: "rgba(229, 77, 46, 0.4)",
-  hoverStroke: "#d13415",
+  fill: "#f8005123",
+  nestedFill: "#e5004f31",
+  stroke: "#e93d82",
+  hoverFill: "#d0004b41",
+  hoverStroke: "#cb1d63",
   outline: "#ffffff",
 };
 

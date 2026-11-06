@@ -154,8 +154,13 @@ export function FeatureMap({
     (layerId: string) => {
       const layer = layers.current.get(layerId)?.layer;
       const size = map?.getSize();
-      if (!map || !layer || !size) return [];
-      return featuresInView(layer, map.getView().calculateExtent(size));
+      const resolution = map?.getView().getResolution();
+      if (!map || !layer || !size || resolution === undefined) return [];
+      return featuresInView(
+        layer,
+        map.getView().calculateExtent(size),
+        resolution,
+      );
     },
     [map],
   );

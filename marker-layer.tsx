@@ -3,7 +3,11 @@ import {
   InteractiveLayer,
   type InteractiveLayerProps,
 } from "./interactive-layer";
-import { usePinStyles } from "./hooks/useLayerStyles";
+import {
+  useFilteredStyles,
+  usePinStyles,
+  type LayerStyles,
+} from "./hooks/useLayerStyles";
 import { useGeoJsonLayer } from "./hooks/useGeoJsonLayer";
 import { useLayerData } from "./hooks/useLayerData";
 import {
@@ -32,9 +36,8 @@ export type MarkerLayerProps = LayerProps &
     pinAnchor?: [number, number]; // point of the pin on the feature; defaults to its tip, or bottom center for a custom pin
   };
 
-type Styles = ReturnType<typeof usePinStyles>;
 type SourceLayerProps = Omit<InteractiveLayerProps, "layer" | "hoverStyle"> & {
-  styles: Styles;
+  styles: LayerStyles;
 };
 
 // Point features drawn as pins, which take priority over the shapes beneath
@@ -46,9 +49,13 @@ export function MarkerLayer({
   pinAnchor,
   color,
   zIndex = MARKERS_Z_INDEX,
+  filter,
   ...props
 }: MarkerLayerProps) {
-  const styles = usePinStyles(pin, pinAnchor, color);
+  const styles = useFilteredStyles(
+    usePinStyles(pin, pinAnchor, color),
+    filter,
+  );
   return tiles ? (
     <TileMarkers
       url={tiles.url}

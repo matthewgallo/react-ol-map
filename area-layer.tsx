@@ -3,7 +3,11 @@ import {
   InteractiveLayer,
   type InteractiveLayerProps,
 } from "./interactive-layer";
-import { useAreaStyles } from "./hooks/useLayerStyles";
+import {
+  useAreaStyles,
+  useFilteredStyles,
+  type LayerStyles,
+} from "./hooks/useLayerStyles";
 import { useGeoJsonLayer } from "./hooks/useGeoJsonLayer";
 import { useLayerData } from "./hooks/useLayerData";
 import {
@@ -28,9 +32,8 @@ export type AreaLayerProps = LayerProps &
     nested?: boolean;
   };
 
-type Styles = ReturnType<typeof useAreaStyles>;
 type SourceLayerProps = Omit<InteractiveLayerProps, "layer" | "hoverStyle"> & {
-  styles: Styles;
+  styles: LayerStyles;
 };
 
 // Shapes (polygons and lines; points draw as dots) filled in `color`. Stack
@@ -41,9 +44,10 @@ export function AreaLayer({
   tiles,
   color,
   nested,
+  filter,
   ...props
 }: AreaLayerProps) {
-  const styles = useAreaStyles(color, nested);
+  const styles = useFilteredStyles(useAreaStyles(color, nested), filter);
   return tiles ? (
     <TileAreas url={tiles.url} styles={styles} color={color} {...props} />
   ) : (

@@ -1,4 +1,4 @@
-import { useEffect, useId, type ReactNode } from "react";
+import { useEffect, useId, useMemo, type ReactNode } from "react";
 import Feature, { type FeatureLike } from "ol/Feature";
 import type { Style } from "ol/style";
 import type { Extent } from "ol/extent";
@@ -7,6 +7,7 @@ import { FeatureDialog } from "./feature-dialog";
 import { FeaturePanel } from "./feature-panel";
 import { useHighlightLayer } from "./hooks/useHighlightLayer";
 import { useMapLayer } from "./hooks/useMapLayer";
+import { featuresAtPoint } from "./utils/featuresAtPoint";
 import { layerColorStyle } from "./utils/layerColor";
 import {
   toProps,
@@ -90,8 +91,19 @@ export function InteractiveLayer({
     if (open && !visible) closeDetails();
   }, [open, visible, closeDetails]);
 
-  const tooltip = ownHovered && renderTooltip?.([toProps(ownHovered)]);
-  const details = ownSelected && renderDialog?.([toProps(ownSelected)]);
+  // Points drawn on the same spot, such as schools sharing a campus, can't
+  // be told apart on the map, so the tooltip and details show all of them
+  const resolution = map?.getView().getResolution();
+  const hoveredProps = useMemo(
+    () => ownHovered && propsAt(layer, ownHovered, resolution),
+    [layer, ownHovered, resolution],
+  );
+  const selectedProps = useMemo(
+    () => ownSelected && propsAt(layer, ownSelected, resolution),
+    [layer, ownSelected, resolution],
+  );
+  const tooltip = hoveredProps && renderTooltip?.(hoveredProps);
+  const details = selectedProps && renderDialog?.(selectedProps);
 
   return (
     <>
@@ -118,6 +130,16 @@ export function InteractiveLayer({
     </>
   );
 }
+
+const propsAt = (
+  layer: VectorBaseLayer | undefined,
+  feature: FeatureLike,
+  resolution: number | undefined,
+) =>
+  (layer && resolution !== undefined
+    ? featuresAtPoint(layer, feature, resolution)
+    : [feature]
+  ).map(toProps);
 
 // A side panel for hover-capable pointers, or a bottom sheet on touch screens
 function FeatureDetails({
