@@ -4,6 +4,7 @@ import type { FeatureLike } from "ol/Feature";
 import type VectorLayer from "ol/layer/Vector";
 import type VectorTileLayer from "ol/layer/VectorTile";
 import type { ThemeProps } from "@radix-ui/themes";
+import type { RadixColor } from "../../styles/radix-colors";
 
 export type GeoJsonData = FeatureCollection<Geometry, GeoJsonProperties>;
 
@@ -15,8 +16,11 @@ export type Render = (features: FeatureProps[]) => ReactNode;
 // Whether a layer draws a feature, from its properties
 export type FeatureFilter = (props: FeatureProps) => boolean;
 
-// A Radix color scale, or "accent" to follow the theme's accent color
-export type MapColor = NonNullable<ThemeProps["accentColor"]> | "accent";
+// A Radix color scale the app loads (see styles/radix.css), or "accent" to
+// follow the theme's accent color
+export type MapColor =
+  | Extract<NonNullable<ThemeProps["accentColor"]>, RadixColor>
+  | "accent";
 
 // The OpenLayers layers an InteractiveLayer can make interactive
 export type VectorBaseLayer = VectorLayer | VectorTileLayer;
