@@ -43,6 +43,7 @@ export function InteractiveLayer({
   hoverStyle,
   extentOf = featureExtent,
   title,
+  featureTitle,
   renderTooltip,
   renderDialog = renderTooltip,
   visible = true,
@@ -104,6 +105,7 @@ export function InteractiveLayer({
   );
   const tooltip = hoveredProps && renderTooltip?.(hoveredProps);
   const details = selectedProps && renderDialog?.(selectedProps);
+  const detailsTitle = (selectedProps && featureTitle?.(selectedProps)) || title;
 
   return (
     <>
@@ -123,7 +125,7 @@ export function InteractiveLayer({
         </div>
       )}
       {ownSelected && hasDetails && (
-        <FeatureDetails open={open} title={title} color={color}>
+        <FeatureDetails open={open} title={detailsTitle} color={color}>
           {details}
         </FeatureDetails>
       )}

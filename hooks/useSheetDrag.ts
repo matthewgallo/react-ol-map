@@ -6,7 +6,8 @@ import {
   type SheetSnap,
 } from "../utils/sheetSnap";
 
-// The sheet's max heights, matching .sheet and .sheet[data-expanded] in
+// The sheet's collapsed max height and expanded height, matching .sheet and
+// .sheet[data-expanded] in
 // map.module.css
 export const COLLAPSED_FRACTION = 0.5; // of the viewport
 export const EXPANDED_GAP = 48; // px left above the expanded sheet
@@ -34,14 +35,16 @@ interface Drag {
   velocity: number; // px/ms, positive while growing
 }
 
-// The sheet's collapsed and expanded heights for its content
+// The sheet's collapsed and expanded heights. Collapsed fits its content (up
+// to half the screen); expanded always fills the screen, however little
+// content it has, so a swipe up always expands it.
 const measure = (sheet: HTMLElement, body: HTMLElement | null) => {
   const natural = body
     ? sheet.offsetHeight - body.clientHeight + body.scrollHeight
     : sheet.offsetHeight;
   const vh = window.innerHeight;
   const collapsed = Math.min(natural, vh * COLLAPSED_FRACTION);
-  return { collapsed, expanded: Math.max(collapsed, Math.min(natural, vh - EXPANDED_GAP)) };
+  return { collapsed, expanded: Math.max(collapsed, vh - EXPANDED_GAP) };
 };
 
 // Swipe gesture for a bottom sheet: up to expand it, down to collapse it,
@@ -63,6 +66,7 @@ export const useSheetDrag = (options: SheetDragOptions) => {
 
     const apply = (visible: number, heights: SheetHeights) => {
       const { height, offset } = dragPosition(visible, heights);
+      sheet.style.minBlockSize = `${height}px`;
       sheet.style.maxBlockSize = `${height}px`;
       sheet.style.setProperty("--sheet-offset", `${offset}px`);
     };
@@ -144,6 +148,7 @@ export const useSheetDrag = (options: SheetDragOptions) => {
 
       // Hand the sheet back to its stylesheet, which transitions it to the snap
       delete sheet.dataset.dragging;
+      sheet.style.removeProperty("min-block-size");
       sheet.style.removeProperty("max-block-size");
       if (target === "dismissed") {
         optionsRef.current.onDismiss();

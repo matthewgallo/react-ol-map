@@ -6,6 +6,14 @@ import { DefaultPin, type PinComponent } from "../pin";
 import { DEFAULT_PIN_ANCHOR } from "../utils/pinGeometry";
 import { pinToSrc } from "../utils/pinToSrc";
 import { HALO_DARK, HALO_EDGE, HALO_LIGHT, HALO_WIDTH } from "../utils/halo";
+import { hatchPattern } from "../utils/hatch";
+import {
+  hasValue,
+  shadeAlphas,
+  shadeClass,
+  withAlpha,
+  type Shade,
+} from "../utils/shade";
 import type { FeatureFilter, MapColor } from "../types";
 
 const HOVER_SCALE = 1.25;
@@ -18,19 +26,33 @@ const dot = (radius: number, color: string) =>
 // Shape styles in a Radix color that follow the light/dark appearance. Points
 // in an area layer are drawn as dots. `nested` areas, drawn within another
 // layer's, get a stronger fill and border to stand out from it and each other.
+// With `shade`, each area's fill opacity steps up with its value (see
+// utils/shade), in place of the even fill, and areas without a value are
+// hatched with its `noData`. Without `fill`, areas are drawn
+// as outlines only, hovered and selected ones too.
 //
 // The dots set declutterMode "none" so they can be hovered and clicked in
 // vector tile layers. When decluttering is off, OpenLayers (10.11) still
 // filters tile hit detection against an empty decluttered-feature list, which
 // silently drops image-styled points unless their declutterMode is "none".
 // The layers don't declutter, so this doesn't change how the dots render.
-export const useAreaStyles = (color: MapColor = "accent", nested = false) => {
+export const useAreaStyles = (
+  color: MapColor = "accent",
+  nested = false,
+  shade?: Shade,
+  fill = true,
+) => {
   const colors = useThemeColors(color);
+  // Compared by value, so a shade written inline doesn't restyle the layer
+  const shadeKey = shade?.key;
+  const shadeSteps = shade?.steps.join(",");
+  const emptyLowest = shade?.emptyLowest;
+  const noData = shade?.noData;
 
-  return useMemo(
-    () => ({
-      base: new Style({
-        fill: new Fill({ color: nested ? colors.nestedFill : colors.fill }),
+  return useMemo(() => {
+    const style = (fillColor: string | CanvasPattern) =>
+      new Style({
+        fill: fill ? new Fill({ color: fillColor }) : undefined,
         stroke: new Stroke({ color: colors.stroke, width: nested ? 2 : 1.25 }),
         image: new Circle({
           radius: 5,
@@ -38,13 +60,33 @@ export const useAreaStyles = (color: MapColor = "accent", nested = false) => {
           fill: new Fill({ color: colors.stroke }),
           stroke: new Stroke({ color: colors.outline, width: 1.5 }),
         }),
-      }),
+      });
+
+    let base: StyleLike = style(nested ? colors.nestedFill : colors.fill);
+    if (shadeKey != null && shadeSteps != null) {
+      const steps = shadeSteps.split(",").filter(Boolean).map(Number);
+      const classes = shadeAlphas(steps, emptyLowest).map((alpha) =>
+        style(withAlpha(colors.stroke, alpha)),
+      );
+      const noDataStyle =
+        noData &&
+        style(hatchPattern(colors.stroke, withAlpha(colors.stroke, 0.04)));
+      base = (feature) => {
+        const value = feature.get(shadeKey);
+        return noDataStyle && !hasValue(value)
+          ? noDataStyle
+          : classes[shadeClass(value, steps)];
+      };
+    }
+
+    return {
+      base,
       // Areas and lines get the halo outline (see utils/halo). Dots get it as
       // rings, stacked as circles from the outside in: black edge, white
       // line, black edge, then the color.
       hover: [
         new Style({
-          fill: new Fill({ color: colors.hoverFill }),
+          fill: fill ? new Fill({ color: colors.hoverFill }) : undefined,
           stroke: new Stroke({
             color: HALO_DARK,
             width: HALO_WIDTH + 2 * HALO_EDGE,
@@ -58,9 +100,8 @@ export const useAreaStyles = (color: MapColor = "accent", nested = false) => {
         new Style({ image: dot(DOT_RADIUS + HALO_EDGE, HALO_DARK) }),
         new Style({ image: dot(DOT_RADIUS, colors.hoverStroke) }),
       ],
-    }),
-    [colors, nested],
-  );
+    };
+  }, [colors, nested, shadeKey, shadeSteps, emptyLowest, noData, fill]);
 };
 
 // A layer's style, and the style of its hovered and selected features

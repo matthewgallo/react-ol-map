@@ -240,6 +240,57 @@ describe("InteractiveLayer details", () => {
     expect(dialog).toHaveTextContent("Saguaro National Park");
   });
 
+  describe("titled by the selected feature", () => {
+    const featureTitle = (features: FeatureProps[]) =>
+      features.length === 1 ? String(features[0].name) : undefined;
+
+    it("heads the side panel with the feature's title", () => {
+      const { hit, show } = setup();
+      show(landUse({ featureTitle }));
+      show(landUse({ featureTitle }), {
+        selected: hit(subdivisions, "Sam Hughes"),
+        detailsOpen: true,
+      });
+      expect(
+        screen.getByRole("complementary", { name: "Sam Hughes" }),
+      ).toBeInTheDocument();
+    });
+
+    it("heads the sheet with the feature's title on touch screens", () => {
+      const { hit, show } = setup({ isTouch: true });
+      show(landUse({ featureTitle }));
+      show(landUse({ featureTitle }), {
+        selected: hit(subdivisions, "Sam Hughes"),
+        detailsOpen: true,
+      });
+      expect(
+        screen.getByRole("dialog", { name: "Sam Hughes" }),
+      ).toBeInTheDocument();
+    });
+
+    it("keeps the layer's title for the tooltip", () => {
+      const { hit, show } = setup();
+      show(landUse({ featureTitle }));
+      show(landUse({ featureTitle }), {
+        hovered: hit(subdivisions, "Sam Hughes"),
+      });
+      expect(tooltipOf("Subdivisions")).toBeInTheDocument();
+    });
+
+    it("falls back to the layer's title when it gives none", () => {
+      const { hit, show } = setup();
+      const untitled = () => undefined;
+      show(landUse({ featureTitle: untitled }));
+      show(landUse({ featureTitle: untitled }), {
+        selected: hit(subdivisions, "Sam Hughes"),
+        detailsOpen: true,
+      });
+      expect(
+        screen.getByRole("complementary", { name: "Subdivisions" }),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("keeps the panel closed while details are closed", () => {
     const { hit, show } = setup();
     show(landUse());

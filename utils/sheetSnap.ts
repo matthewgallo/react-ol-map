@@ -5,7 +5,7 @@ export type SheetSnap = "collapsed" | "expanded";
 
 export interface SheetHeights {
   collapsed: number;
-  expanded: number; // equal to collapsed when the content fits collapsed
+  expanded: number; // never less than collapsed
 }
 
 // How far ahead a release's velocity carries the sheet, so a flick snaps

@@ -16,6 +16,7 @@ import {
   type TileConfig,
 } from "./hooks/useVectorTileLayer";
 import type { GeoJsonData, LayerProps } from "./types";
+import type { Shade } from "./utils/shade";
 
 // One way to load the features, each suited to a different size:
 // - data: inline GeoJSON, loaded all at once
@@ -30,6 +31,12 @@ export type AreaLayerProps = LayerProps &
   AreaSource & {
     // Drawn within another layer's areas: a stronger fill and border
     nested?: boolean;
+    // Fills each area more strongly the higher its value, by steps
+    shade?: Shade;
+    // false draws the areas as outlines only, hovered and selected ones too,
+    // such as while shaded areas are drawn over them. Defaults to true.
+    // Unfilled areas can only be hovered and clicked along their outlines.
+    fill?: boolean;
   };
 
 type SourceLayerProps = Omit<InteractiveLayerProps, "layer" | "hoverStyle"> & {
@@ -44,10 +51,15 @@ export function AreaLayer({
   tiles,
   color,
   nested,
+  shade,
+  fill,
   filter,
   ...props
 }: AreaLayerProps) {
-  const styles = useFilteredStyles(useAreaStyles(color, nested), filter);
+  const styles = useFilteredStyles(
+    useAreaStyles(color, nested, shade, fill),
+    filter,
+  );
   return tiles ? (
     <TileAreas url={tiles.url} styles={styles} color={color} {...props} />
   ) : (

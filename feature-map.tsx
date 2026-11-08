@@ -19,6 +19,7 @@ import { useBasemap } from "./hooks/useBasemap";
 import { useCloseOnEscape } from "./hooks/useCloseOnEscape";
 import { useFeatureClick } from "./hooks/useFeatureClick";
 import { useFitSelected } from "./hooks/useFitSelected";
+import { COLLAPSED_FRACTION } from "./hooks/useSheetDrag";
 import { useFullScreenControl } from "./hooks/useFullScreenControl";
 import { useHomeView, type Bounds } from "./hooks/useHomeView";
 import { useHoveredHit } from "./hooks/useHoveredHit";
@@ -199,9 +200,17 @@ export function FeatureMap({
       const panelWidth = panel?.offsetWidth ?? 0;
       return [FIT_PADDING, FIT_PADDING, FIT_PADDING, FIT_PADDING + panelWidth];
     }
+    // The sheet often grows just after it opens, as content such as a
+    // parent's links to its children fills in once their layer loads. Plan
+    // for the height it can reach while collapsed, so the selection isn't
+    // left under it.
+    const sheetHeight = Math.max(
+      panel.offsetHeight,
+      window.innerHeight * COLLAPSED_FRACTION,
+    );
     const { coveredTop, coveredBottom } = scrollMapAboveSheet(
       mapElement,
-      panel.offsetHeight,
+      sheetHeight,
     );
     // Leave at least a strip of the map to fit into
     const spare = Math.max(

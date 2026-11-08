@@ -36,7 +36,10 @@ export interface LayerProps {
   // Names the layer in the map's hover and selection (Hit.layerId), for
   // components that act on them. Unique within the map; generated if unset.
   id?: string;
-  title?: string; // details heading when one of its features is selected
+  title?: string; // tooltip heading, and details heading by default
+  // Details heading for the selected features, such as the feature's name,
+  // in place of `title`. Falls back to `title` when it returns nothing.
+  featureTitle?: (features: FeatureProps[]) => string | undefined;
   renderTooltip?: Render; // shown on hover
   renderDialog?: Render; // shown on click; defaults to renderTooltip
   visible?: boolean;
