@@ -24,6 +24,7 @@ import { useFullScreenControl } from "./hooks/useFullScreenControl";
 import { useHomeView, type Bounds } from "./hooks/useHomeView";
 import { useHoveredHit } from "./hooks/useHoveredHit";
 import { ResetViewButton } from "./reset-view-button";
+import { unwrapCluster, zoomToCluster } from "./utils/cluster";
 import { featuresInView } from "./utils/featuresInView";
 import { pickHit } from "./utils/pickHit";
 import { scrollMapAboveSheet } from "./utils/scrollMapAboveSheet";
@@ -130,7 +131,9 @@ export function FeatureMap({
         pixel,
         (feature, layer) => {
           const layerId = ids.get(layer);
-          if (layerId) hits.push({ layerId, feature });
+          if (layerId) {
+            hits.push({ layerId, feature: unwrapCluster(feature) });
+          }
         },
         { hitTolerance, layerFilter: (l) => ids.has(l) },
       );
@@ -168,14 +171,6 @@ export function FeatureMap({
 
   // Interactions. Hover only applies to hover-capable pointers.
   const hovered = useHoveredHit(map, !isTouch, hitAt);
-  const handleClick = useCallback((hit: Hit | undefined) => {
-    // Empty map, or a feature without details content
-    if (!hit || !layers.current.get(hit.layerId)?.hasDetails) {
-      return setSelection((s) => s && { ...s, open: false });
-    }
-    setSelection({ hit, open: true });
-  }, []);
-  useFeatureClick(map, clickHitAt, handleClick);
 
   // Zoom to the selection, keeping it clear of the side panel. On touch
   // screens, first scroll the map above the bottom sheet, then keep the
@@ -221,6 +216,31 @@ export function FeatureMap({
     const bottom = Math.min(coveredBottom, spare - top);
     return [FIT_PADDING + top, FIT_PADDING, FIT_PADDING + bottom, FIT_PADDING];
   }, [isTouch, map]);
+
+  const handleClick = useCallback(
+    (hit: Hit | undefined) => {
+      const layer = hit && layers.current.get(hit.layerId);
+      // A cluster that zooming in can spread out. Any open details stay open,
+      // as a layer can need them to be drawn at all, such as a district's
+      // schools. A cluster that can't be spread out opens its points.
+      if (
+        map &&
+        hit &&
+        layer &&
+        zoomToCluster(map, layer.layer, hit.feature, fitPadding)
+      ) {
+        return;
+      }
+      // Empty map, or a feature without details content
+      if (!hit || !layer?.hasDetails) {
+        return setSelection((s) => s && { ...s, open: false });
+      }
+      setSelection({ hit, open: true });
+    },
+    [map, fitPadding],
+  );
+  useFeatureClick(map, clickHitAt, handleClick);
+
   const openHit = selection?.open ? selection.hit : undefined;
   useFitSelected(map, openHit, extentOf, fitPadding, !isTouch || !!panel);
 

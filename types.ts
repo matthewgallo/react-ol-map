@@ -22,6 +22,15 @@ export type MapColor =
   | Extract<NonNullable<ThemeProps["accentColor"]>, RadixColor>
   | "accent";
 
+// Draws nearby points as one badge with their count, in the layer's color.
+// true uses the defaults. Off unless set, so every point is drawn.
+export type ClusterOption =
+  | boolean
+  | {
+      distance?: number; // points this many pixels apart cluster; defaults to 40
+      minDistance?: number; // keeps badges this many pixels apart; defaults to 0
+    };
+
 // The OpenLayers layers an InteractiveLayer can make interactive
 export type VectorBaseLayer = VectorLayer | VectorTileLayer;
 

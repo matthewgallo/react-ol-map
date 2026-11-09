@@ -1,6 +1,7 @@
 import type { FeatureLike } from "ol/Feature";
 import type { Extent } from "ol/extent";
 import VectorTileLayer from "ol/layer/VectorTile";
+import Cluster from "ol/source/Cluster";
 import { keyOf, type VectorBaseLayer } from "../types";
 
 // Whether the layer's style draws `feature` at `resolution`. A style
@@ -16,7 +17,8 @@ const isDrawn = (
 
 // A layer's features drawn within `extent`, once each. Tile layers only have
 // the features of the tiles they last drew, split into a piece per tile, so
-// this keeps one piece of each; hidden ones have none.
+// this keeps one piece of each; hidden ones have none. Clustered layers give
+// the points themselves, rather than the clusters they're drawn as.
 export const featuresInView = (
   layer: VectorBaseLayer,
   extent: Extent,
@@ -25,7 +27,9 @@ export const featuresInView = (
   if (!layer.getVisible()) return [];
   const drawn = (f: FeatureLike) => isDrawn(layer, f, resolution);
   if (!(layer instanceof VectorTileLayer)) {
-    return (layer.getSource()?.getFeaturesInExtent(extent) ?? []).filter(drawn);
+    const source = layer.getSource();
+    const points = source instanceof Cluster ? source.getSource() : source;
+    return (points?.getFeaturesInExtent(extent) ?? []).filter(drawn);
   }
   const seen = new Set<unknown>();
   return layer.getFeaturesInExtent(extent).filter((f) => {

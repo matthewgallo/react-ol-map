@@ -9,6 +9,7 @@ const colors: ThemeColors = {
   stroke: "#111111",
   hoverFill: "rgba(0, 0, 0, 0.4)",
   hoverStroke: "#222222",
+  contrast: "#ffffff",
   outline: "#ffffff",
 };
 

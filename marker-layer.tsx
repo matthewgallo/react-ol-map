@@ -4,6 +4,7 @@ import {
   type InteractiveLayerProps,
 } from "./interactive-layer";
 import {
+  useClusterStyles,
   useFilteredStyles,
   usePinStyles,
   type LayerStyles,
@@ -16,7 +17,7 @@ import {
   type TileConfig,
 } from "./hooks/useVectorTileLayer";
 import type { PinComponent } from "./pin";
-import type { GeoJsonData, LayerProps } from "./types";
+import type { ClusterOption, GeoJsonData, LayerProps } from "./types";
 
 // Markers draw above area layers and their highlights by default
 const MARKERS_Z_INDEX = 20;
@@ -25,10 +26,11 @@ const MARKERS_Z_INDEX = 20;
 // - data: inline GeoJSON, loaded all at once
 // - url: GeoJSON fetched from a URL, loaded all at once
 // - tiles: vector tiles, streamed for what's in view (large datasets)
+// Only GeoJSON can `cluster`: tiles only hold the points in view.
 type MarkerSource =
-  | { data: GeoJsonData; url?: never; tiles?: never }
-  | { url: string; data?: never; tiles?: never }
-  | { tiles: TileConfig; data?: never; url?: never };
+  | { data: GeoJsonData; url?: never; tiles?: never; cluster?: ClusterOption }
+  | { url: string; data?: never; tiles?: never; cluster?: ClusterOption }
+  | { tiles: TileConfig; data?: never; url?: never; cluster?: never };
 
 export type MarkerLayerProps = LayerProps &
   MarkerSource & {
@@ -45,6 +47,7 @@ export function MarkerLayer({
   data,
   url,
   tiles,
+  cluster,
   pin,
   pinAnchor,
   color,
@@ -53,8 +56,8 @@ export function MarkerLayer({
   ...props
 }: MarkerLayerProps) {
   const styles = useFilteredStyles(
-    usePinStyles(pin, pinAnchor, color),
-    filter,
+    useClusterStyles(usePinStyles(pin, pinAnchor, color), !!cluster, color),
+    cluster ? undefined : filter, // clusters leave out what it rejects instead
   );
   return tiles ? (
     <TileMarkers
@@ -68,9 +71,11 @@ export function MarkerLayer({
     <GeoJsonMarkers
       data={data}
       url={url}
+      cluster={cluster}
       styles={styles}
       color={color}
       zIndex={zIndex}
+      filter={filter}
       {...props}
     />
   );
@@ -79,10 +84,21 @@ export function MarkerLayer({
 function GeoJsonMarkers({
   data,
   url,
+  cluster,
   styles,
+  filter,
   ...props
-}: SourceLayerProps & { data?: GeoJsonData; url?: string }) {
-  const layer = useGeoJsonLayer(useLayerData(data, url), styles.base);
+}: SourceLayerProps & {
+  data?: GeoJsonData;
+  url?: string;
+  cluster?: ClusterOption;
+}) {
+  const layer = useGeoJsonLayer(
+    useLayerData(data, url),
+    styles.base,
+    cluster,
+    filter,
+  );
   return <InteractiveLayer layer={layer} hoverStyle={styles.hover} {...props} />;
 }
 

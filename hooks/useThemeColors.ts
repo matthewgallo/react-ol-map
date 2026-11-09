@@ -9,6 +9,7 @@ const STEPS = {
   stroke: "9",
   hoverFill: "a6",
   hoverStroke: "11",
+  contrast: "contrast", // text on the stroke color
 } as const;
 const OUTLINE = "--color-panel-solid";
 
@@ -27,6 +28,7 @@ const FALLBACK: ThemeColors = {
   stroke: "#e93d82",
   hoverFill: "#d0004b41",
   hoverStroke: "#cb1d63",
+  contrast: "#ffffff",
   outline: "#ffffff",
 };
 

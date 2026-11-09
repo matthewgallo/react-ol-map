@@ -37,27 +37,43 @@ export const useHoveredHit = (
       setHovered((prev) => (sameHit(prev, next) ? prev : next));
     };
 
-    const onMove = (evt: MapBrowserEvent) => {
-      if (evt.dragging || isOverControl(evt)) return update(undefined);
-      const next = hitAt(evt.pixel, evt.coordinate);
+    const hoverAt = (pixel: Pixel, coordinate: Coordinate) => {
+      const next = hitAt(pixel, coordinate);
       if (next) {
-        targetEl.style.setProperty("--pointer-x", `${evt.pixel[0]}px`);
-        targetEl.style.setProperty("--pointer-y", `${evt.pixel[1]}px`);
+        targetEl.style.setProperty("--pointer-x", `${pixel[0]}px`);
+        targetEl.style.setProperty("--pointer-y", `${pixel[1]}px`);
         const [width, height] = map.getSize() ?? [0, 0];
-        targetEl.dataset.pointerX = evt.pixel[0] > width / 2 ? "right" : "left";
-        targetEl.dataset.pointerY =
-          evt.pixel[1] > height / 2 ? "bottom" : "top";
+        targetEl.dataset.pointerX = pixel[0] > width / 2 ? "right" : "left";
+        targetEl.dataset.pointerY = pixel[1] > height / 2 ? "bottom" : "top";
       }
       update(next);
     };
-    const onLeave = () => update(undefined);
+
+    // Where the pointer rests on the map, if it does
+    let pointer: Pixel | undefined;
+    const onMove = (evt: MapBrowserEvent) => {
+      pointer = isOverControl(evt) ? undefined : evt.pixel;
+      if (evt.dragging || !pointer) return update(undefined);
+      hoverAt(evt.pixel, evt.coordinate);
+    };
+    const onLeave = () => {
+      pointer = undefined;
+      update(undefined);
+    };
+    // What's under a resting pointer changes once the view does: zooming
+    // replaces clusters, which would leave a tooltip for one that's gone
+    const onMoveEnd = () => {
+      if (pointer) hoverAt(pointer, map.getCoordinateFromPixel(pointer));
+    };
 
     map.on("pointermove", onMove);
     map.on("click", onMove);
+    map.on("moveend", onMoveEnd);
     viewportEl?.addEventListener("pointerleave", onLeave);
     return () => {
       map.un("pointermove", onMove);
       map.un("click", onMove);
+      map.un("moveend", onMoveEnd);
       viewportEl?.removeEventListener("pointerleave", onLeave);
       update(undefined);
     };

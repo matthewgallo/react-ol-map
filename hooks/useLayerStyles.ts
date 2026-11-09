@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { Circle, Fill, Icon, Stroke, Style } from "ol/style";
+import { Circle, Fill, Icon, Stroke, Style, Text } from "ol/style";
 import type { StyleFunction, StyleLike } from "ol/style/Style";
 import { useThemeColors } from "./useThemeColors";
 import { DefaultPin, type PinComponent } from "../pin";
 import { DEFAULT_PIN_ANCHOR } from "../utils/pinGeometry";
 import { pinToSrc } from "../utils/pinToSrc";
+import { clusterMembers } from "../utils/cluster";
 import { HALO_DARK, HALO_EDGE, HALO_LIGHT, HALO_WIDTH } from "../utils/halo";
 import { hatchPattern } from "../utils/hatch";
 import {
@@ -107,8 +108,105 @@ export const useAreaStyles = (
 // A layer's style, and the style of its hovered and selected features
 export interface LayerStyles {
   base: StyleLike;
-  hover: Style[];
+  hover: StyleLike;
 }
+
+const CLUSTER_RADIUS = 14; // a badge of up to 9 points
+const CLUSTER_RADIUS_PER_DIGIT = 3; // room for each further digit
+const CLUSTER_RING = 5; // the soft ring around a badge
+
+// Canvas text can't inherit from the page, so a badge's count reads the app's
+// font from the Theme root
+const clusterFont = () => {
+  const root =
+    document.querySelector(".radix-themes") ?? document.documentElement;
+  const family = getComputedStyle(root)
+    .getPropertyValue("--default-font-family")
+    .trim();
+  return `600 12px ${family || "system-ui, sans-serif"}`;
+};
+
+const clusterRadius = (count: number) =>
+  CLUSTER_RADIUS + CLUSTER_RADIUS_PER_DIGIT * (String(count).length - 1);
+
+const countLabel = (count: number, color: string, font: string) =>
+  new Text({
+    text: String(count),
+    font,
+    fill: new Fill({ color }),
+  });
+
+// `styles` for a clustered layer: clusters of several points draw as a badge
+// in the layer's color with their count, and clusters of one in the layer's
+// own style. Badges use the color's solid step and its contrast color, so the
+// count stays legible on every scale, in light and dark. Hovered badges get
+// the same rings as dots (see useAreaStyles).
+export const useClusterStyles = (
+  styles: LayerStyles,
+  clustered: boolean,
+  color: MapColor = "accent",
+): LayerStyles => {
+  const colors = useThemeColors(color);
+
+  return useMemo(() => {
+    if (!clustered) return styles;
+
+    const font = clusterFont();
+    const badge = (count: number) => {
+      const radius = clusterRadius(count);
+      return [
+        new Style({
+          image: dot(radius + CLUSTER_RING, withAlpha(colors.stroke, 0.3)),
+        }),
+        new Style({
+          image: new Circle({
+            radius,
+            fill: new Fill({ color: colors.stroke }),
+            stroke: new Stroke({ color: colors.outline, width: 2 }),
+          }),
+          text: countLabel(count, colors.contrast, font),
+        }),
+      ];
+    };
+    const hoveredBadge = (count: number) => {
+      const radius = clusterRadius(count);
+      return [
+        new Style({ image: dot(radius + 2 * HALO_EDGE + HALO_WIDTH, HALO_DARK) }),
+        new Style({ image: dot(radius + HALO_EDGE + HALO_WIDTH, HALO_LIGHT) }),
+        new Style({ image: dot(radius + HALO_EDGE, HALO_DARK) }),
+        new Style({
+          image: dot(radius, colors.hoverStroke),
+          // Step 11 flips with the appearance, as the panel color does
+          text: countLabel(count, colors.outline, font),
+        }),
+      ];
+    };
+
+    // Each count's badge is built once and shared between its clusters
+    const withClusters = (
+      plain: StyleLike,
+      draw: (count: number) => Style[],
+    ): StyleFunction => {
+      const badges = new Map<number, Style[]>();
+      return (feature, resolution) => {
+        const members = clusterMembers(feature);
+        if (members && members.length > 1) {
+          const count = members.length;
+          if (!badges.has(count)) badges.set(count, draw(count));
+          return badges.get(count);
+        }
+        return typeof plain === "function"
+          ? plain(members?.[0] ?? feature, resolution)
+          : plain;
+      };
+    };
+
+    return {
+      base: withClusters(styles.base, badge),
+      hover: withClusters(styles.hover, hoveredBadge),
+    };
+  }, [styles, clustered, colors]);
+};
 
 // `styles` with its base style drawing only the features `filter` accepts.
 // Features it rejects get no style, so they aren't drawn or hit-detected.

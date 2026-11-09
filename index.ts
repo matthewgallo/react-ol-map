@@ -23,6 +23,7 @@ export {
   type ShadeClass,
 } from "./utils/shade";
 export type {
+  ClusterOption,
   FeatureFilter,
   FeatureProps,
   GeoJsonData,

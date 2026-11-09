@@ -5,6 +5,7 @@ import Feature from "ol/Feature";
 import type { StyleFunction } from "ol/style/Style";
 import {
   useAreaStyles,
+  useClusterStyles,
   useFilteredStyles,
   usePinStyles,
 } from "./useLayerStyles";
@@ -99,5 +100,64 @@ describe("useFilteredStyles", () => {
       return { styles, filtered: useFilteredStyles(styles, undefined) };
     });
     expect(result.current.filtered).toBe(result.current.styles);
+  });
+});
+
+describe("useClusterStyles", () => {
+  const point = (name: string) => new Feature({ name });
+  const cluster = (...features: Feature[]) => new Feature({ features });
+
+  it("returns the layer's styles untouched when clustering is off", () => {
+    const { result } = renderHook(() => {
+      const styles = usePinStyles();
+      return { styles, clustered: useClusterStyles(styles, false) };
+    });
+    expect(result.current.clustered).toBe(result.current.styles);
+  });
+
+  it("draws several points as a badge with their count", () => {
+    const { result } = renderHook(() =>
+      useClusterStyles(usePinStyles(), true),
+    );
+    const base = result.current.base as StyleFunction;
+    const styles = base(cluster(point("a"), point("b")), 1) as Style[];
+    expect(styles.at(-1)?.getText()?.getText()).toBe("2");
+  });
+
+  it("draws a cluster of one and a plain point in the layer's own style", () => {
+    const { result } = renderHook(() => {
+      const styles = usePinStyles();
+      return { styles, clustered: useClusterStyles(styles, true) };
+    });
+    const base = result.current.clustered.base as StyleFunction;
+    expect(base(cluster(point("a")), 1)).toBe(result.current.styles.base);
+    expect(base(point("a"), 1)).toBe(result.current.styles.base);
+  });
+
+  it("gives a cluster of one the feature it stands for", () => {
+    const seen: unknown[] = [];
+    const plain: StyleFunction = (feature) => {
+      seen.push(feature);
+      return undefined;
+    };
+    const { result } = renderHook(() =>
+      useClusterStyles({ base: plain, hover: [] }, true),
+    );
+    const a = point("a");
+    (result.current.base as StyleFunction)(cluster(a), 1);
+    expect(seen).toEqual([a]);
+  });
+
+  it("grows the badge as its count gains digits", () => {
+    const { result } = renderHook(() =>
+      useClusterStyles(usePinStyles(), true),
+    );
+    const base = result.current.base as StyleFunction;
+    const radiusOf = (count: number) => {
+      const features = Array.from({ length: count }, (_, i) => point(`${i}`));
+      const styles = base(cluster(...features), 1) as Style[];
+      return (styles[styles.length - 1].getImage() as Circle).getRadius();
+    };
+    expect(radiusOf(12)).toBeGreaterThan(radiusOf(9));
   });
 });

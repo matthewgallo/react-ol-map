@@ -1,12 +1,14 @@
 import { useEffect, useId, useMemo, type ReactNode } from "react";
 import Feature, { type FeatureLike } from "ol/Feature";
-import type { Style } from "ol/style";
+import type { StyleLike } from "ol/style/Style";
 import type { Extent } from "ol/extent";
+import { useTranslation } from "react-i18next";
 import { useFeatureMap } from "./context";
 import { FeatureDialog } from "./feature-dialog";
 import { FeaturePanel } from "./feature-panel";
 import { useHighlightLayer } from "./hooks/useHighlightLayer";
 import { useMapLayer } from "./hooks/useMapLayer";
+import { clusterMembers, isCluster } from "./utils/cluster";
 import { featuresAtPoint } from "./utils/featuresAtPoint";
 import { layerColorStyle } from "./utils/layerColor";
 import {
@@ -27,7 +29,7 @@ const featureExtent = (f: FeatureLike): Extent | undefined =>
 
 export interface InteractiveLayerProps extends LayerProps {
   layer: VectorBaseLayer | undefined; // undefined while its data loads
-  hoverStyle: Style[]; // for hovered and selected features, drawn in order
+  hoverStyle: StyleLike; // for hovered and selected features, drawn in order
   // Extent to zoom to when a feature is selected; defaults to its geometry's
   extentOf?: (feature: FeatureLike) => Extent | undefined;
 }
@@ -52,6 +54,7 @@ export function InteractiveLayer({
   highlightZIndex = zIndex + HIGHLIGHT_Z_OFFSET,
   color = "accent",
 }: InteractiveLayerProps) {
+  const { t } = useTranslation();
   const generatedId = useId();
   const id = idProp ?? generatedId;
   const {
@@ -103,7 +106,11 @@ export function InteractiveLayer({
     () => ownSelected && propsAt(layer, ownSelected, resolution),
     [layer, ownSelected, resolution],
   );
-  const tooltip = hoveredProps && renderTooltip?.(hoveredProps);
+  // A cluster can hold hundreds of points, so its tooltip only counts them
+  const tooltip =
+    ownHovered && isCluster(ownHovered) && renderTooltip
+      ? t("map.clusterCount", { count: hoveredProps?.length })
+      : hoveredProps && renderTooltip?.(hoveredProps);
   const details = selectedProps && renderDialog?.(selectedProps);
   const detailsTitle = (selectedProps && featureTitle?.(selectedProps)) || title;
 
@@ -138,9 +145,11 @@ const propsAt = (
   feature: FeatureLike,
   resolution: number | undefined,
 ) =>
-  (layer && resolution !== undefined
-    ? featuresAtPoint(layer, feature, resolution)
-    : [feature]
+  (
+    clusterMembers(feature) ??
+    (layer && resolution !== undefined
+      ? featuresAtPoint(layer, feature, resolution)
+      : [feature])
   ).map(toProps);
 
 // A side panel for hover-capable pointers, or a bottom sheet on touch screens

@@ -5,6 +5,7 @@ import {
 } from "./interactive-layer";
 import {
   useAreaStyles,
+  useClusterStyles,
   useFilteredStyles,
   type LayerStyles,
 } from "./hooks/useLayerStyles";
@@ -15,17 +16,19 @@ import {
   useVectorTileLayer,
   type TileConfig,
 } from "./hooks/useVectorTileLayer";
-import type { GeoJsonData, LayerProps } from "./types";
+import type { ClusterOption, GeoJsonData, LayerProps } from "./types";
 import type { Shade } from "./utils/shade";
 
 // One way to load the features, each suited to a different size:
 // - data: inline GeoJSON, loaded all at once
 // - url: GeoJSON fetched from a URL, loaded all at once
 // - tiles: vector tiles, streamed for what's in view (large datasets)
+// Only GeoJSON can `cluster`: tiles only hold the points in view. A clustered
+// layer draws only its points, leaving out any polygons and lines.
 type AreaSource =
-  | { data: GeoJsonData; url?: never; tiles?: never }
-  | { url: string; data?: never; tiles?: never }
-  | { tiles: TileConfig; data?: never; url?: never };
+  | { data: GeoJsonData; url?: never; tiles?: never; cluster?: ClusterOption }
+  | { url: string; data?: never; tiles?: never; cluster?: ClusterOption }
+  | { tiles: TileConfig; data?: never; url?: never; cluster?: never };
 
 export type AreaLayerProps = LayerProps &
   AreaSource & {
@@ -49,6 +52,7 @@ export function AreaLayer({
   data,
   url,
   tiles,
+  cluster,
   color,
   nested,
   shade,
@@ -57,8 +61,8 @@ export function AreaLayer({
   ...props
 }: AreaLayerProps) {
   const styles = useFilteredStyles(
-    useAreaStyles(color, nested, shade, fill),
-    filter,
+    useClusterStyles(useAreaStyles(color, nested, shade, fill), !!cluster, color),
+    cluster ? undefined : filter, // clusters leave out what it rejects instead
   );
   return tiles ? (
     <TileAreas url={tiles.url} styles={styles} color={color} {...props} />
@@ -66,8 +70,10 @@ export function AreaLayer({
     <GeoJsonAreas
       data={data}
       url={url}
+      cluster={cluster}
       styles={styles}
       color={color}
+      filter={filter}
       {...props}
     />
   );
@@ -76,10 +82,21 @@ export function AreaLayer({
 function GeoJsonAreas({
   data,
   url,
+  cluster,
   styles,
+  filter,
   ...props
-}: SourceLayerProps & { data?: GeoJsonData; url?: string }) {
-  const layer = useGeoJsonLayer(useLayerData(data, url), styles.base);
+}: SourceLayerProps & {
+  data?: GeoJsonData;
+  url?: string;
+  cluster?: ClusterOption;
+}) {
+  const layer = useGeoJsonLayer(
+    useLayerData(data, url),
+    styles.base,
+    cluster,
+    filter,
+  );
   return <InteractiveLayer layer={layer} hoverStyle={styles.hover} {...props} />;
 }
 

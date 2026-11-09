@@ -133,6 +133,12 @@
   inset-block-start: calc(0.5em + 2.0625em + 2px + var(--space-2));
 }
 
+/* In the corner itself where the browser can't go full screen, as on
+   iPhones, and OpenLayers hides the button */
+.mapContainer:has(:global(.ol-full-screen.ol-unsupported)) .legend {
+  inset-block-start: 0.5em;
+}
+
 .legendScale {
   margin: 0;
 }

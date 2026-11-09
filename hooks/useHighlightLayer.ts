@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from "react";
 import type OLMap from "ol/Map";
 import type { FeatureLike } from "ol/Feature";
-import type { Style } from "ol/style";
+import type { StyleLike } from "ol/style/Style";
 import VectorLayer from "ol/layer/Vector";
 import VectorTileLayer from "ol/layer/VectorTile";
 import { keyOf, type VectorBaseLayer } from "../types";
+import { clusterMembers } from "../utils/cluster";
 import { useMapLayer } from "./useMapLayer";
 
 // Draws the hovered and selected features of `base` again in `style`, on a
@@ -14,7 +15,7 @@ import { useMapLayer } from "./useMapLayer";
 export const useHighlightLayer = (
   map: OLMap | null | undefined,
   base: VectorBaseLayer | undefined,
-  style: Style[],
+  style: StyleLike,
   zIndex: number,
   visible: boolean,
   hovered: FeatureLike | undefined,
@@ -40,7 +41,15 @@ export const useHighlightLayer = (
     const keys = new Set(
       [hovered, selected].flatMap((f) => (f ? [keyOf(f)] : [])),
     );
+    // Hits name a cluster's point rather than a cluster of one, and a
+    // selected point can be swept into a cluster by zooming out
+    const matches = (f: FeatureLike) =>
+      keys.has(keyOf(f)) ||
+      !!clusterMembers(f)?.some((member) => keys.has(keyOf(member)));
     // Features without a style aren't drawn, so everything else stays hidden
-    layer.setStyle((f) => (keys.has(keyOf(f)) ? style : undefined));
+    layer.setStyle((f, resolution) => {
+      if (!matches(f)) return undefined;
+      return typeof style === "function" ? style(f, resolution) : style;
+    });
   }, [layer, style, hovered, selected]);
 };
