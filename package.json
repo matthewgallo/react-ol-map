@@ -1,6 +1,6 @@
 {
   "name": "@matthewgallo/react-ol-map",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive OpenLayers maps for React, styled with Radix Themes: stacked area and marker layers with shared hover, selection, details panels and clustering.",
   "license": "MIT",
   "type": "module",

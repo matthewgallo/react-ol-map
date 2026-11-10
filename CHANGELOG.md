@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/matthewgallo/react-ol-map/compare/v1.0.0...v1.0.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* address token setup issue ([5d79b00](https://github.com/matthewgallo/react-ol-map/commit/5d79b00dda2d0fd388fd67e5cee73f025d0091ca))
+
 ## 1.0.0 (2026-11-10)
 
 
