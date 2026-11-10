@@ -203,8 +203,14 @@
   opacity: 0.45;
 }
 
-.legendItems > li[data-active] .legendSwatch {
+.legendSwatch {
   position: relative;
+  box-shadow:
+    0 0 0 1px transparent,
+    0 0 0 2.5px transparent;
+}
+
+.legendItems > li[data-active] .legendSwatch {
   box-shadow:
     0 0 0 1px var(--color-panel-solid),
     0 0 0 2.5px var(--gray-12);
