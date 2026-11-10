@@ -182,6 +182,18 @@ yarn install
 yarn test     # also: yarn lint, yarn typecheck, yarn build
 ```
 
+### Storybook
+
+```bash
+yarn storybook   # http://localhost:6006
+```
+
+The stories recreate each of [folklorico](https://github.com/matthewgallo/folklorico)'s maps with its own data, grouped by what they show: areas, pins, clustering, and layers drawn within a selected feature of another (with shading and legends). Each story says which folklorico map it is. The toolbar switches the theme and the language of the map's own text.
+
+For the basemap, copy `.env.example` to `.env.local` and add a CARTO API key as `VITE_MAP_KEY`; without one, CARTO draws "API KEY REQUIRED" tiles. `.env.local` is gitignored, but the key is visible in the browser's tile requests to anyone viewing Storybook, so restrict it to your domains in CARTO if you can.
+
+Storybook serves the data from folklorico's `public/data`, so clone folklorico next to this repository (`../folklorico`). Storybook says so if it's missing. The stories import the package's source, so changes show without a build.
+
 ## Releasing
 
 Releases are automated with [release-please](https://github.com/googleapis/release-please). Don't edit `version` in `package.json` yourself.
