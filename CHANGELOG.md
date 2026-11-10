@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/matthewgallo/react-ol-map/compare/v1.1.0...v1.1.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* resolve css outline clipping for non selected legend items ([b23fed8](https://github.com/matthewgallo/react-ol-map/commit/b23fed860b0fc0434d47c01dc5b09282de6ad419))
+* resolve css outline clipping for non selected legend items ([4f0e294](https://github.com/matthewgallo/react-ol-map/commit/4f0e294cc8a5af6b60a1ce56db2836f4a61c9418))
+
 ## [1.1.0](https://github.com/matthewgallo/react-ol-map/compare/v1.0.1...v1.1.0) (2026-11-10)
 
 
