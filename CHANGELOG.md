@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/matthewgallo/react-ol-map/compare/v1.0.1...v1.1.0) (2026-11-10)
+
+
+### Features
+
+* emphasize the hovered or selected area's class in ShadeLegend ([0d0691b](https://github.com/matthewgallo/react-ol-map/commit/0d0691b22d97e358581df70e86f330f74fe49b19))
+* update legend interaction / add storybook ([21d814b](https://github.com/matthewgallo/react-ol-map/commit/21d814bed4128b1687bbcb9354818779aa2e9b15))
+
 ## [1.0.1](https://github.com/matthewgallo/react-ol-map/compare/v1.0.0...v1.0.1) (2026-11-10)
 
 
