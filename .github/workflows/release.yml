@@ -6,6 +6,9 @@ name: Release
 on:
   push:
     branches: [main]
+  # Publishes package.json's version without a new release, to retry a
+  # publish that failed. Run it from the Actions tab, on main.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -29,8 +32,14 @@ jobs:
   # other workflows.
   publish:
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: >-
+      needs.release-please.outputs.release_created == 'true' ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # For the whole job, not just npm publish: registry-url writes an .npmrc
+    # that reads it, and Yarn 1 fails every command while it's unset
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -46,5 +55,3 @@ jobs:
 
       # prepack builds it
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
