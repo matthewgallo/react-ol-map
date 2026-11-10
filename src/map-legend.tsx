@@ -1,13 +1,15 @@
-import { useId, type ReactNode } from "react";
+import { useContext, useId, type ReactNode } from "react";
 import { Text } from "@radix-ui/themes";
 import { useLabels } from "./labels";
 import { useIsTouchScreen } from "./hooks/useIsTouchScreen";
-import { useFeatureMap } from "./context";
+import { FeatureMapContext, useFeatureMap } from "./context";
 import type { MapColor } from "./types";
 import { hatchBackground } from "./utils/hatch";
 import {
   formatBoundsRange,
   formatCountRange,
+  hasValue,
+  shadeClass,
   shadeClasses,
   type Shade,
   type ShadeClass,
@@ -56,11 +58,19 @@ interface LegendScaleProps {
   // Outlines the swatches in this color's border step, as its areas are
   // outlined on the map, so faint swatches still show
   outline?: MapColor;
+  // Index of the item to emphasize, such as the hovered feature's, with the
+  // rest dimmed
+  active?: number;
 }
 
 // An ordered scale: a bar of swatches, each labeled beneath. Screen readers
 // get the title and the labels in order; the swatches are decorative.
-export function LegendScale({ title, items, outline }: LegendScaleProps) {
+export function LegendScale({
+  title,
+  items,
+  outline,
+  active,
+}: LegendScaleProps) {
   const titleId = useId();
   return (
     <figure className={styles.legendScale} aria-labelledby={titleId}>
@@ -69,6 +79,7 @@ export function LegendScale({ title, items, outline }: LegendScaleProps) {
       </Text>
       <ol
         className={styles.legendItems}
+        data-has-active={active != null || undefined}
         // The scale's swatches share its width evenly; one set apart takes
         // its label's
         style={{
@@ -77,8 +88,13 @@ export function LegendScale({ title, items, outline }: LegendScaleProps) {
             .join(" "),
         }}
       >
-        {items.map(({ label, fill, apart }) => (
-          <li key={label} data-apart={apart || undefined}>
+        {items.map(({ label, fill, apart }, i) => (
+          <li
+            key={label}
+            data-apart={apart || undefined}
+            data-active={i === active || undefined}
+            aria-current={i === active || undefined}
+          >
             <span
               className={styles.legendSwatch}
               style={{
@@ -87,7 +103,14 @@ export function LegendScale({ title, items, outline }: LegendScaleProps) {
               }}
               aria-hidden
             />
-            <Text size="1" color="gray">
+            {/* data-label sizes it for its bold, emphasized text, so
+                emphasizing an item doesn't resize the legend */}
+            <Text
+              size="1"
+              color="gray"
+              className={styles.legendLabel}
+              data-label={label}
+            >
               {label}
             </Text>
           </li>
@@ -108,6 +131,10 @@ interface ShadeLegendProps {
   ranges?: RangeStyle;
   // Labels each class in place of `ranges`
   formatRange?: (shadeClass: ShadeClass) => string;
+  // The shaded layer's `id`. Emphasizes the class of its hovered feature, or
+  // else of its selected one while its details are open, which tells apart
+  // shades that look alike.
+  layerId?: string;
 }
 
 export type RangeStyle = "count" | "compact";
@@ -119,8 +146,13 @@ export function ShadeLegend({
   color = "accent",
   ranges = "count",
   formatRange,
+  layerId,
 }: ShadeLegendProps) {
   const { labels, locale: language } = useLabels();
+  // Nullable rather than useFeatureMap, so the legend renders outside a map
+  const map = useContext(FeatureMapContext);
+  const hit =
+    map?.hovered ?? (map?.detailsOpen ? map.selected : undefined);
   const label =
     formatRange ??
     (ranges === "compact"
@@ -145,5 +177,20 @@ export function ShadeLegend({
       apart: true,
     });
   }
-  return <LegendScale title={title} items={items} outline={color} />;
+  let active: number | undefined;
+  if (layerId != null && hit?.layerId === layerId) {
+    const value = hit.feature.get(shade.key);
+    active =
+      shade.noData && !hasValue(value)
+        ? items.length - 1 // no data, last
+        : shadeClass(value, shade.steps);
+  }
+  return (
+    <LegendScale
+      title={title}
+      items={items}
+      outline={color}
+      active={active}
+    />
+  );
 }

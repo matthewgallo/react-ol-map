@@ -4,5 +4,15 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      // Story files export story objects, and their support files share
+      // hooks beside components. Fast refresh reloads them, which is fine.
+      "files": ["stories/**", ".storybook/**"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    }
+  ]
 }
