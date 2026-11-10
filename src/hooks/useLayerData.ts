@@ -1,6 +1,6 @@
 import { useEffect, useId } from "react";
 import { useFeatureMap } from "../context";
-import { useGeoJson } from "../../../hooks/useGeoJson";
+import { useGeoJson } from "./useGeoJson";
 import type { GeoJsonData } from "../types";
 
 // GeoJSON given inline (`data`) or fetched from `url`. While fetching, or if

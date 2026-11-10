@@ -4,7 +4,22 @@ import type { FeatureLike } from "ol/Feature";
 import type VectorLayer from "ol/layer/Vector";
 import type VectorTileLayer from "ol/layer/VectorTile";
 import type { ThemeProps } from "@radix-ui/themes";
-import type { RadixColor } from "../../styles/radix-colors";
+
+// Augment to narrow MapColor to the Radix color scales your app loads, so a
+// color without CSS variables is a type error:
+//
+//   declare module "@matthewgallo/react-ol-map" {
+//     interface Register {
+//       color: "blue" | "grass" | "crimson";
+//     }
+//   }
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface Register {}
+
+type AccentColor = NonNullable<ThemeProps["accentColor"]>;
+type RegisteredColor = Register extends { color: infer C extends string }
+  ? C
+  : AccentColor;
 
 export type GeoJsonData = FeatureCollection<Geometry, GeoJsonProperties>;
 
@@ -16,11 +31,9 @@ export type Render = (features: FeatureProps[]) => ReactNode;
 // Whether a layer draws a feature, from its properties
 export type FeatureFilter = (props: FeatureProps) => boolean;
 
-// A Radix color scale the app loads (see styles/radix.css), or "accent" to
-// follow the theme's accent color
-export type MapColor =
-  | Extract<NonNullable<ThemeProps["accentColor"]>, RadixColor>
-  | "accent";
+// A Radix color scale (narrowed by Register), or "accent" to follow the
+// theme's accent color
+export type MapColor = Extract<AccentColor, RegisteredColor> | "accent";
 
 // Draws nearby points as one badge with their count, in the layer's color.
 // true uses the defaults. Off unless set, so every point is drawn.

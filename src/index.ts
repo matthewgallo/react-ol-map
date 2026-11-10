@@ -33,3 +33,24 @@ export type {
   Render,
 } from "./types";
 export { DefaultPin, type PinComponent, type PinProps } from "./pin";
+// The hovered and selected outline, for custom pins that draw their own
+export {
+  HALO_DARK,
+  HALO_EDGE,
+  HALO_LIGHT,
+  HALO_WIDTH,
+} from "./utils/halo";
+export { DEFAULT_LABELS, type MapLabels } from "./labels";
+export {
+  cartoBasemap,
+  type Appearance,
+  type Basemap,
+} from "./hooks/useBasemap";
+export type { Register } from "./types";
+// For rendering layer content outside a FeatureMap, such as in tests
+export {
+  FeatureMapContext,
+  type FeatureMapContextValue,
+  type LayerRegistration,
+  type LayerStatus,
+} from "./context";

@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from "react";
 import { Text } from "@radix-ui/themes";
-import { useTranslation } from "react-i18next";
-import { useIsTouchScreen } from "../../hooks/useIsTouchScreen";
+import { useLabels } from "./labels";
+import { useIsTouchScreen } from "./hooks/useIsTouchScreen";
 import { useFeatureMap } from "./context";
 import type { MapColor } from "./types";
 import { hatchBackground } from "./utils/hatch";
@@ -24,7 +24,7 @@ import styles from "./map.module.css";
 // little of the map in view. It stays, as layers drawn only while their
 // parent's details are open, such as a county's divisions, need it then.
 export function MapLegend({ children }: { children?: ReactNode }) {
-  const { t } = useTranslation();
+  const { labels } = useLabels();
   const { detailsOpen } = useFeatureMap();
   const isTouch = useIsTouchScreen();
   if (!children || (Array.isArray(children) && !children.some(Boolean))) {
@@ -34,7 +34,7 @@ export function MapLegend({ children }: { children?: ReactNode }) {
     <section
       className={styles.legend}
       data-compact={(isTouch && detailsOpen) || undefined}
-      aria-label={t("map.legend")}
+      aria-label={labels.legend}
     >
       {children}
     </section>
@@ -120,8 +120,7 @@ export function ShadeLegend({
   ranges = "count",
   formatRange,
 }: ShadeLegendProps) {
-  const { t, i18n } = useTranslation();
-  const language = i18n.resolvedLanguage;
+  const { labels, locale: language } = useLabels();
   const label =
     formatRange ??
     (ranges === "compact"
@@ -141,7 +140,7 @@ export function ShadeLegend({
   }));
   if (shade.noData) {
     items.push({
-      label: t("map.noData"),
+      label: labels.noData,
       fill: hatchBackground(`var(--${color}-9)`),
       apart: true,
     });

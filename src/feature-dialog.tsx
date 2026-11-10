@@ -5,8 +5,8 @@ import {
   Theme,
   VisuallyHidden,
 } from "@radix-ui/themes";
-import { useTranslation } from "react-i18next";
-import { useFullscreenElement } from "../../hooks/useFullscreenElement";
+import { useLabels } from "./labels";
+import { useFullscreenElement } from "./hooks/useFullscreenElement";
 
 import { useSheetDrag } from "./hooks/useSheetDrag";
 import { useCloseOnTapOutside } from "./hooks/useCloseOnTapOutside";
@@ -43,7 +43,7 @@ export function FeatureDialog({
   sheetRef: externalRef,
   children,
 }: FeatureDialogProps) {
-  const { t } = useTranslation();
+  const { labels } = useLabels();
   const fullscreenElement = useFullscreenElement();
   const bodyRef = useRef<HTMLDivElement>(null);
   const sheetElement = useRef<HTMLElement | null>(null);
@@ -108,7 +108,7 @@ export function FeatureDialog({
               <div className={styles.sheetHandle} aria-hidden />
               <ThemedDialog.Title className={styles.layerTitle} mb="0">
                 <span className={styles.swatch} aria-hidden />
-                {title ?? t("map.details")}
+                {title ?? labels.details}
               </ThemedDialog.Title>
             </div>
             <div ref={bodyRef} className={styles.sheetBody}>
@@ -119,7 +119,7 @@ export function FeatureDialog({
                 button. */}
             <VisuallyHidden>
               <Dialog.Close asChild>
-                <button type="button">{t("map.close")}</button>
+                <button type="button">{labels.close}</button>
               </Dialog.Close>
             </VisuallyHidden>
           </Dialog.Content>

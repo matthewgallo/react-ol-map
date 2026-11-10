@@ -6,7 +6,7 @@ const map = vi.hoisted(() => ({ detailsOpen: false, isTouch: false }));
 vi.mock("./context", () => ({
   useFeatureMap: () => ({ detailsOpen: map.detailsOpen }),
 }));
-vi.mock("../../hooks/useIsTouchScreen", () => ({
+vi.mock("./hooks/useIsTouchScreen", () => ({
   useIsTouchScreen: () => map.isTouch,
 }));
 

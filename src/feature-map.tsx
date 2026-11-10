@@ -3,7 +3,6 @@ import { Callout, Skeleton } from "@radix-ui/themes";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { Map, View, TileLayer } from "react-openlayers";
 import { fromLonLat } from "ol/proj";
-import { useTranslation } from "react-i18next";
 import type OLMap from "ol/Map";
 import type BaseLayer from "ol/layer/Base";
 import type { Pixel } from "ol/pixel";
@@ -14,8 +13,14 @@ import {
   type LayerRegistration,
   type LayerStatus,
 } from "./context";
-import { useIsTouchScreen } from "../../hooks/useIsTouchScreen";
-import { useBasemap } from "./hooks/useBasemap";
+import { useIsTouchScreen } from "./hooks/useIsTouchScreen";
+import {
+  cartoBasemap,
+  useBasemap,
+  type Appearance,
+  type Basemap,
+} from "./hooks/useBasemap";
+import { DEFAULT_LABELS, LabelsContext, type MapLabels } from "./labels";
 import { useCloseOnEscape } from "./hooks/useCloseOnEscape";
 import { useFeatureClick } from "./hooks/useFeatureClick";
 import { useFitSelected } from "./hooks/useFitSelected";
@@ -43,6 +48,8 @@ const MIN_FIT_HEIGHT = 64;
 // Clicks reach a little past a feature's edge, for small or thin features
 const CLICK_TOLERANCE = 6;
 
+const DEFAULT_BASEMAP = cartoBasemap();
+
 export interface FeatureMapProps {
   center?: [number, number];
   zoom?: number;
@@ -55,6 +62,13 @@ export interface FeatureMapProps {
   fullScreen?: boolean; // show the full screen button
   // show a reset button once moved away from `center` and `zoom`
   resetView?: boolean;
+  // Tiles beneath the layers; CARTO's by default (see cartoBasemap)
+  basemap?: Basemap;
+  // Light or dark basemap. Follows a "dark" or "dark-theme" class on <html>
+  // when unset, as Radix Themes and next-themes set.
+  appearance?: Appearance;
+  labels?: Partial<MapLabels>; // translated text, in place of the English
+  locale?: string; // formats legend numbers; the browser's language if unset
   children?: ReactNode; // layers: AreaLayer, MarkerLayer, InteractiveLayer
 }
 
@@ -71,13 +85,21 @@ export function FeatureMap({
   highlightOnHover = true,
   fullScreen = true,
   resetView = true,
+  basemap: basemapOptions = DEFAULT_BASEMAP,
+  appearance,
+  labels: labelOverrides,
+  locale,
   children,
 }: FeatureMapProps) {
-  const { t } = useTranslation();
+  const labels = useMemo(
+    () => ({ ...DEFAULT_LABELS, ...labelOverrides }),
+    [labelOverrides],
+  );
+  const labelsContext = useMemo(() => ({ labels, locale }), [labels, locale]);
   const isTouch = useIsTouchScreen();
   const [map, setMap] = useState<OLMap | null | undefined>(null);
-  const basemap = useBasemap();
-  useFullScreenControl(map, fullScreen, t("map.fullScreen"));
+  const basemap = useBasemap(basemapOptions, appearance);
+  useFullScreenControl(map, fullScreen, labels.fullScreen);
   // Until `bounds` are fitted, start in their middle
   const [lon, lat] =
     center ??
@@ -264,6 +286,7 @@ export function FeatureMap({
   };
 
   return (
+    <LabelsContext value={labelsContext}>
     <FeatureMapContext value={context}>
       <div
         className={`${styles.mapContainer} ${className || ""}`.trim()}
@@ -287,7 +310,7 @@ export function FeatureMap({
             <Callout.Icon>
               <ExclamationTriangleIcon />
             </Callout.Icon>
-            <Callout.Text>{t("map.loadError")}</Callout.Text>
+            <Callout.Text>{labels.loadError}</Callout.Text>
           </Callout.Root>
         ) : (
           statusList.includes("loading") && (
@@ -296,5 +319,6 @@ export function FeatureMap({
         )}
       </div>
     </FeatureMapContext>
+    </LabelsContext>
   );
 }

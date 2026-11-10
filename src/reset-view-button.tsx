@@ -1,6 +1,6 @@
 import { IconButton, Tooltip } from "@radix-ui/themes";
 import { Crosshair2Icon } from "@radix-ui/react-icons";
-import { useTranslation } from "react-i18next";
+import { useLabels } from "./labels";
 import type OLMap from "ol/Map";
 import type { Coordinate } from "ol/coordinate";
 import { useViewChanged } from "./hooks/useViewChanged";
@@ -17,7 +17,7 @@ interface ResetViewButtonProps {
 // Shown below the zoom buttons once the map is zoomed or panned away from its
 // default view, and animates back to it (center and zoom) when pressed
 export function ResetViewButton({ map, center, zoom }: ResetViewButtonProps) {
-  const { t } = useTranslation();
+  const { labels } = useLabels();
   const changed = useViewChanged(map, center, zoom);
   if (!map || !changed) return null;
 
@@ -36,7 +36,7 @@ export function ResetViewButton({ map, center, zoom }: ResetViewButtonProps) {
     map.getTargetElement()?.focus();
   };
 
-  const label = t("map.resetView");
+  const label = labels.resetView;
   return (
     <div className={styles.resetView}>
       <Tooltip content={label}>

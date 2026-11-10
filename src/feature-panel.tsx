@@ -9,7 +9,7 @@ import {
 } from "react";
 import { Box, Flex, Heading, IconButton, ScrollArea } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
-import { useTranslation } from "react-i18next";
+import { useLabels } from "./labels";
 
 import type { MapColor } from "./types";
 import { layerColorStyle } from "./utils/layerColor";
@@ -33,7 +33,7 @@ export function FeaturePanel({
   onClose,
   children,
 }: FeaturePanelProps) {
-  const { t } = useTranslation();
+  const { labels } = useLabels();
   const titleId = useId();
   const panelRef = useRef<HTMLElement>(null);
   useImperativeHandle(ref, () => panelRef.current as HTMLElement);
@@ -89,13 +89,13 @@ export function FeaturePanel({
       >
         <Heading as="h3" size="3" id={titleId} className={styles.layerTitle}>
           <span className={styles.swatch} aria-hidden />
-          {title ?? t("map.details")}
+          {title ?? labels.details}
         </Heading>
         <IconButton
           ref={closeRef}
           variant="ghost"
           color="gray"
-          aria-label={t("map.close")}
+          aria-label={labels.close}
           onClick={onClose}
         >
           <Cross2Icon />

@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, type ReactNode } from "react";
 import Feature, { type FeatureLike } from "ol/Feature";
 import type { StyleLike } from "ol/style/Style";
 import type { Extent } from "ol/extent";
-import { useTranslation } from "react-i18next";
+import { useLabels } from "./labels";
 import { useFeatureMap } from "./context";
 import { FeatureDialog } from "./feature-dialog";
 import { FeaturePanel } from "./feature-panel";
@@ -54,7 +54,7 @@ export function InteractiveLayer({
   highlightZIndex = zIndex + HIGHLIGHT_Z_OFFSET,
   color = "accent",
 }: InteractiveLayerProps) {
-  const { t } = useTranslation();
+  const { labels } = useLabels();
   const generatedId = useId();
   const id = idProp ?? generatedId;
   const {
@@ -109,7 +109,7 @@ export function InteractiveLayer({
   // A cluster can hold hundreds of points, so its tooltip only counts them
   const tooltip =
     ownHovered && isCluster(ownHovered) && renderTooltip
-      ? t("map.clusterCount", { count: hoveredProps?.length })
+      ? labels.clusterCount(hoveredProps?.length ?? 0)
       : hoveredProps && renderTooltip?.(hoveredProps);
   const details = selectedProps && renderDialog?.(selectedProps);
   const detailsTitle = (selectedProps && featureTitle?.(selectedProps)) || title;
