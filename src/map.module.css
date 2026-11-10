@@ -203,17 +203,30 @@
   opacity: 0.45;
 }
 
+/* The ring, over the swatch's border box and corners. Raised over the
+   other items, as each dimmed one, by its opacity, is a stacking context
+   painted in source order with positioned elements, and the next would
+   cover it. Fades with the dimming. */
 .legendSwatch {
   position: relative;
-  box-shadow:
-    0 0 0 1px transparent,
-    0 0 0 2.5px transparent;
 }
 
-.legendItems > li[data-active] .legendSwatch {
+.legendSwatch::after {
+  content: "";
+  position: absolute;
+  inset: -1px; /* the swatch's border */
+  z-index: 1;
+  border-radius: inherit;
   box-shadow:
     0 0 0 1px var(--color-panel-solid),
     0 0 0 2.5px var(--gray-12);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+
+.legendItems > li[data-active] .legendSwatch::after {
+  opacity: 1;
 }
 
 .legendItems > li[data-active] .legendLabel {
@@ -241,7 +254,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .legendItems > li {
+  .legendItems > li,
+  .legendSwatch::after {
     transition: none;
   }
 }
