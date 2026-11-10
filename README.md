@@ -155,6 +155,26 @@ Clicking a cluster zooms in until its points separate. Points too close to ever 
 
 Clustering needs every point at once, so it only works with GeoJSON (`data` or `url`), not `tiles`. A clustered layer draws only its points, leaving out any polygons and lines.
 
+## Shading and legends
+
+Pass `shade` to an `AreaLayer` to fill each area more strongly the higher its value, by steps. Put a `MapLegend` inside the map to show the scale, with a `ShadeLegend` for each shaded layer (or a `LegendScale` for your own items):
+
+```tsx
+const population = { key: "population", steps: [10_000, 50_000, 250_000] };
+
+<FeatureMap bounds={county}>
+  <AreaLayer id="divisions" tiles={{ url: "/data/tiles/divisions.pmtiles" }} color="amber" shade={population} />
+  <MapLegend>
+    <ShadeLegend title="Population" shade={population} color="amber" ranges="compact" layerId="divisions" />
+  </MapLegend>
+</FeatureMap>
+```
+
+- `emptyLowest`: the lowest class means none, so it's drawn nearly empty.
+- `noData`: areas without a value are hatched, and the legend gets a "No data" entry.
+- `ranges`: labels classes as counts (`"2–4"`, the default) or compactly by their bounds (`"10K–50K"`); `formatRange` labels them your own way.
+- `layerId`: the shaded layer's `id`. The legend then emphasizes the class of the hovered area, or of the selected one while its details are open, and dims the rest, which tells apart shades that look alike. `LegendScale` takes the item to emphasize as `active`.
+
 ## Development
 
 ```bash

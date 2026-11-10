@@ -193,6 +193,53 @@
   border: 1px solid var(--gray-a7);
 }
 
+/* An emphasized item, such as the hovered area's class: the others dim, and
+   its swatch is ringed in the text color and its label strengthened */
+.legendItems > li {
+  transition: opacity 120ms ease-out;
+}
+
+.legendItems[data-has-active] > li:not([data-active]) {
+  opacity: 0.45;
+}
+
+.legendItems > li[data-active] .legendSwatch {
+  position: relative;
+  box-shadow:
+    0 0 0 1px var(--color-panel-solid),
+    0 0 0 2.5px var(--gray-12);
+}
+
+.legendItems > li[data-active] .legendLabel {
+  color: var(--gray-12);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Every label takes the width of its bold text, from an invisible bold copy
+   of it, so emphasizing one doesn't resize the legend. Hidden copies are
+   left out of the accessibility tree. */
+.legendLabel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.legendLabel::after {
+  content: attr(data-label);
+  block-size: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: var(--font-weight-bold);
+  user-select: none;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .legendItems > li {
+    transition: none;
+  }
+}
+
 .legendItems > li:first-child .legendSwatch {
   border-start-start-radius: var(--radius-1);
   border-end-start-radius: var(--radius-1);
