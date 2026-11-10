@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/matthewgallo/react-ol-map/compare/v1.1.1...v1.1.2) (2026-11-10)
+
+
+### Bug Fixes
+
+* use pseudo element for map legend selected item to avoid clipping ([03e0d68](https://github.com/matthewgallo/react-ol-map/commit/03e0d681ec6c28adafb5e4cb23018172b4a098fc))
+
 ## [1.1.1](https://github.com/matthewgallo/react-ol-map/compare/v1.1.0...v1.1.1) (2026-11-10)
 
 
