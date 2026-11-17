@@ -1,0 +1,93 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mission San Xavier del Bac",
+        "established": 1692
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-111.0081, 32.1072]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Presidio San Agustín del Tucsón",
+        "established": 1775
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.9727, 32.2237]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "University of Arizona",
+        "established": 1885
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.9533, 32.2319]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "St. Augustine Cathedral",
+        "established": 1896
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.9702, 32.2197]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hotel Congress",
+        "established": 1919
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.9673, 32.2224]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tucson Museum of Art",
+        "established": 1924
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.975, 32.2235]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Pima County Courthouse",
+        "established": 1929
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.9737, 32.2226]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Fox Tucson Theatre",
+        "established": 1930
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.9705, 32.2217]
+      }
+    }
+  ]
+}

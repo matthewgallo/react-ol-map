@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AreaLayer } from "../src";
 import { renderFields } from "./support/fields";
+import { withSnippet } from "./support/render-snippet";
 import { GEOJSON, PIMA_COUNTY_BOUNDS, TUCSON, tiles } from "./support/places";
 import { StoryMap } from "./support/story-map";
 
 // AreaLayer: polygons filled in a Radix color, over display-only boundaries,
-// as folklorico's sample maps draw them
+// as folklorico's sample maps draw them. Their details end with a snippet showing
+// how renderDialog gets all of an area's data.
 const meta = {
   title: "Areas",
   component: StoryMap,
@@ -24,10 +26,10 @@ const CityLimits = () => (
   />
 );
 
-// Display-only county outline, from the population tiles' shape
+// Display-only county outline
 const County = () => (
   <AreaLayer
-    {...tiles("pima_county_population")}
+    {...tiles("pima_county")}
     color="gray"
     interactive={false}
     zIndex={0}
@@ -42,8 +44,8 @@ const protectedLand = renderFields([
   ["DEPT", "Department"],
 ]);
 
-export const TucsonNeighborhoods: Story = {
-  name: "Tucson neighborhoods",
+export const AdjoiningAreas: Story = {
+  name: "Adjoining areas",
   parameters: {
     description:
       "Sample maps › Tucson neighborhoods: tile areas over the display-only GeoJSON city limits.",
@@ -56,13 +58,15 @@ export const TucsonNeighborhoods: Story = {
         color="violet"
         title="Neighborhoods"
         renderTooltip={neighborhood}
+        renderDialog={withSnippet(neighborhood)}
         zIndex={1}
       />
     </StoryMap>
   ),
 };
 
-export const Subdivisions: Story = {
+export const ThousandsOfAreas: Story = {
+  name: "Thousands of small areas",
   parameters: {
     description:
       "Sample maps › Subdivisions: thousands of small tile areas, loaded only for what's in view.",
@@ -75,14 +79,15 @@ export const Subdivisions: Story = {
         color="blue"
         title="Subdivisions"
         renderTooltip={subdivision}
+        renderDialog={withSnippet(subdivision)}
         zIndex={1}
       />
     </StoryMap>
   ),
 };
 
-export const ProtectedLands: Story = {
-  name: "Protected lands",
+export const ScatteredAreas: Story = {
+  name: "Scattered areas",
   parameters: {
     description:
       "Sample maps › Protected lands: tile areas over a display-only county outline.",
@@ -95,6 +100,7 @@ export const ProtectedLands: Story = {
         color="grass"
         title="Protected lands"
         renderTooltip={protectedLand}
+        renderDialog={withSnippet(protectedLand)}
         zIndex={1}
       />
     </StoryMap>
@@ -103,8 +109,8 @@ export const ProtectedLands: Story = {
 
 // Several area layers overlaid, each with its own color, tooltip and details.
 // zIndex keeps them in order, as same-zIndex layers draw in the order added.
-export const LandUse: Story = {
-  name: "Land use",
+export const StackedAreaLayers: Story = {
+  name: "Stacked area layers",
   parameters: {
     description:
       "Sample maps › Land use: two tile area layers stacked with `zIndex` over a display-only county. Hover where they overlap: the top-most feature wins.",
@@ -117,6 +123,7 @@ export const LandUse: Story = {
         color="grass"
         title="Protected lands"
         renderTooltip={protectedLand}
+        renderDialog={withSnippet(protectedLand)}
         zIndex={1}
       />
       <AreaLayer
@@ -124,6 +131,7 @@ export const LandUse: Story = {
         color="blue"
         title="Subdivisions"
         renderTooltip={subdivision}
+        renderDialog={withSnippet(subdivision)}
         zIndex={2}
       />
     </StoryMap>

@@ -25,7 +25,7 @@ const ArizonaBoundary = () => (
 );
 
 export const ClusteredPins: Story = {
-  name: "Arizona libraries (pins)",
+  name: "Clustered pins",
   parameters: {
     description:
       "Sample maps › Arizona libraries: clustered GeoJSON pins (`cluster`). Hover a badge for its count, click it to zoom in.",
@@ -48,7 +48,7 @@ export const ClusteredPins: Story = {
 };
 
 export const ClusteredDots: Story = {
-  name: "Arizona schools (dots, custom spacing)",
+  name: "Clustered dots (custom spacing)",
   parameters: {
     description:
       "Sample maps › Arizona schools: thousands of points as clustered dots (an AreaLayer), spaced for the widest badges with `cluster={{ distance: 60, minDistance: 56 }}`.",

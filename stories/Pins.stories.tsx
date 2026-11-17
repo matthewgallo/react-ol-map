@@ -5,13 +5,7 @@ import {
   PAPEL_PICADO_PIN_ANCHOR,
   PapelPicadoPin,
 } from "./support/papel-picado-pin";
-import {
-  AFFILIATED_SPACES_BOUNDS,
-  ARIZONA,
-  GEOJSON,
-  TUCSON_CITY_BOUNDS,
-  tiles,
-} from "./support/places";
+import { ARIZONA, GEOJSON, tiles } from "./support/places";
 import { StoryMap } from "./support/story-map";
 
 // MarkerLayer: points drawn as pins, above every area layer
@@ -40,87 +34,11 @@ const ArizonaBoundary = () => (
   />
 );
 
-export const CommunityGroups: Story = {
-  name: "Community groups",
+export const PinsWithDetails: Story = {
+  name: "Pins with details",
   parameters: {
     description:
-      "Maps › Community groups: tile points as default pins over the display-only city limits.",
-  },
-  render: () => (
-    <StoryMap bounds={TUCSON_CITY_BOUNDS}>
-      <CityLimits />
-      <MarkerLayer
-        {...tiles("community_groups_table")}
-        color="violet"
-        title="Folklórico community groups"
-        renderTooltip={renderFields([
-          ["Name", "Name"],
-          ["Address", "Address"],
-        ])}
-      />
-    </StoryMap>
-  ),
-};
-
-export const AfterSchoolPrograms: Story = {
-  name: "After-school programs",
-  parameters: {
-    description:
-      "Maps › After-school programs: tile pins whose details (click one) show more than their tooltip, with `renderDialog`.",
-  },
-  render: () => (
-    <StoryMap bounds={TUCSON_CITY_BOUNDS}>
-      <CityLimits />
-      <MarkerLayer
-        {...tiles("after_school_programs_table")}
-        color="teal"
-        title="Folklórico after-school programs"
-        renderTooltip={renderFields([
-          ["Full Name", "Name"],
-          ["Address", "Address"],
-        ])}
-        renderDialog={renderFields([
-          ["Full Name", "Name"],
-          ["Level", "Level"],
-          ["District", "School district"],
-          ["Address", "Address"],
-          ["Website", "Website"],
-        ])}
-      />
-    </StoryMap>
-  ),
-};
-
-// A custom pin component, drawn on the map's canvas as an image
-export const AffiliatedSpaces: Story = {
-  name: "Affiliated spaces (custom pin)",
-  parameters: {
-    description:
-      "Maps › Affiliated spaces: tile points drawn with a custom `pin` (folklorico's papel picado flag), anchored at its center with `pinAnchor`.",
-  },
-  render: () => (
-    <StoryMap bounds={AFFILIATED_SPACES_BOUNDS}>
-      <CityLimits />
-      <MarkerLayer
-        {...tiles("affiliated_spaces_table")}
-        pin={PapelPicadoPin}
-        pinAnchor={PAPEL_PICADO_PIN_ANCHOR}
-        color="crimson"
-        title="Folklórico affiliated spaces"
-        renderTooltip={renderFields([
-          ["Affiliated Spaces", "Name"],
-          ["Address", "Address"],
-        ])}
-      />
-    </StoryMap>
-  ),
-};
-
-export const ArizonaOrganizations: Story = {
-  name: "Arizona organizations",
-  parameters: {
-    description:
-      "Sample maps › Arizona organizations: tile pins across the state, opened with `center` and `zoom`.",
+      "Sample maps › Arizona organizations: tile pins across the state, opened with `center` and `zoom`. Their details (click one) show more than their tooltip, with `renderDialog`.",
   },
   render: () => (
     <StoryMap {...ARIZONA}>
@@ -146,9 +64,34 @@ export const ArizonaOrganizations: Story = {
   ),
 };
 
+// A custom pin component, drawn on the map's canvas as an image
+export const CustomPins: Story = {
+  name: "Custom pins",
+  parameters: {
+    description:
+      "Sample maps › Arizona organizations: tile points drawn with a custom `pin` (folklorico's papel picado flag), anchored at its center with `pinAnchor`.",
+  },
+  render: () => (
+    <StoryMap {...ARIZONA}>
+      <ArizonaBoundary />
+      <MarkerLayer
+        {...tiles("arizona_folklorico_organizations")}
+        pin={PapelPicadoPin}
+        pinAnchor={PAPEL_PICADO_PIN_ANCHOR}
+        color="crimson"
+        title="Folklórico organizations"
+        renderTooltip={renderFields([
+          ["Organization Name", "Name"],
+          ["Address", "Address"],
+        ])}
+      />
+    </StoryMap>
+  ),
+};
+
 // Pins from a GeoJSON file over tile areas: pins take priority on hover
-export const TucsonLandmarks: Story = {
-  name: "Tucson landmarks",
+export const PinsOverAreas: Story = {
+  name: "Pins over areas",
   parameters: {
     description:
       "Sample maps › Tucson landmarks: GeoJSON pins over tile neighborhoods. A pin wins over the area beneath it.",

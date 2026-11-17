@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import type { Preview } from "@storybook/react-vite";
+import type { Preview, StoryContext } from "@storybook/react-vite";
 import { Text, Theme } from "@radix-ui/themes";
 import { LocaleContext, type Locale } from "../stories/support/locale";
+import { storySource } from "./source";
 
 import "@radix-ui/themes/styles.css";
 
@@ -62,6 +63,18 @@ const preview: Preview = {
   parameters: {
     layout: "fullscreen",
     controls: { expanded: true },
+    // A Code panel beside Controls with each story's source, for consumers:
+    // the story's own code, trimmed to what it renders. The panel only runs
+    // `transform` on a rendered ("dynamic") snippet, so it's given the
+    // story's original source in place of its rendered tree.
+    docs: {
+      codePanel: true,
+      source: {
+        type: "dynamic",
+        transform: (code: string, context: StoryContext) =>
+          storySource(context.parameters.docs?.source?.originalSource ?? code),
+      },
+    },
     options: {
       // Components with their playgrounds first, then folklorico's maps
       storySort: {

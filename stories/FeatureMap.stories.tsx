@@ -116,12 +116,12 @@ export const Playground: Story = {
 export const FitToBounds: Story = {
   parameters: {
     description:
-      "Fitted to Pima County with `bounds`, as the Pima County maps open. The county is a display-only layer (`interactive={false}`).",
+      "Fitted to Pima County with `bounds`, as the protected lands and land use sample maps open. The county is a display-only layer (`interactive={false}`).",
   },
   render: () => (
     <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
       <AreaLayer
-        {...tiles("pima_county_population")}
+        {...tiles("pima_county")}
         color="gray"
         interactive={false}
       />

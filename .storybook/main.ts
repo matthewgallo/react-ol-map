@@ -1,21 +1,15 @@
-import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/react-vite";
 
-// The stories draw folklorico's own data, served as /data like the site does,
-// from a folklorico checkout beside this repository
-const data = fileURLToPath(
-  new URL("../../folklorico/public/data", import.meta.url),
-);
-if (!existsSync(data)) {
-  throw new Error(
-    `Storybook reads map data from folklorico, expected at ${data}. Clone matthewgallo/folklorico next to react-ol-map.`,
-  );
-}
+// The stories' data, copied from folklorico's public/data and served as /data
+// like the site does
+const data = fileURLToPath(new URL("../stories/data", import.meta.url));
 
 const config: StorybookConfig = {
   stories: ["../stories/**/*.stories.tsx"],
   staticDirs: [{ from: data, to: "/data" }],
+  // For the Code panel beside Controls (docs.codePanel in preview.tsx)
+  addons: ["@storybook/addon-docs"],
   core: { disableTelemetry: true },
   framework: {
     name: "@storybook/react-vite",

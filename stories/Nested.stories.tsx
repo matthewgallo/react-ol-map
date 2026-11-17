@@ -1,16 +1,16 @@
+import { useMemo } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   AreaLayer,
   MapLegend,
-  MarkerLayer,
   ShadeLegend,
   type FeatureFilter,
-  type FeatureProps,
   type MapColor,
   type RangeStyle,
   type Shade,
 } from "../src";
 import { renderFields, type Fields } from "./support/fields";
+import { withSnippet } from "./support/render-snippet";
 import {
   ChildLinks,
   ParentLink,
@@ -19,11 +19,14 @@ import {
   withLinks,
 } from "./support/nested";
 import {
-  PAPEL_PICADO_PIN_ANCHOR,
-  PapelPicadoPin,
-} from "./support/papel-picado-pin";
+  OrganizationLinks,
+  StateOrganizations,
+  stateTitle,
+} from "./support/organizations";
 import {
+  ARIZONA,
   CONTIGUOUS_US_BOUNDS,
+  GEOJSON,
   PIMA_COUNTY_BOUNDS,
   POINTS,
   tiles,
@@ -31,9 +34,9 @@ import {
 import { StoryMap } from "./support/story-map";
 
 // Layers drawn within a selected feature of another, as folklorico's maps page
-// does with LayerConfig.parent: click a county, district or state to draw its
-// divisions, schools or organizations, and move between them with the links
-// in the details. Built from useFeatureMap, useLastSelected,
+// does with LayerConfig.parent: click a county or state to draw its areas,
+// schools or organizations, and move between them with the links in the
+// details. Built from useFeatureMap, useLastSelected,
 // useLayerFeatures and `filter` (see support/nested.tsx).
 const meta = {
   title: "Layers within layers",
@@ -44,72 +47,68 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-interface CountyDivisionsProps {
-  county: string; // tile archives
-  divisions: string;
+interface CountyAreasProps {
+  areas: string; // tile archive
+  title: string;
   countyColor: MapColor;
-  divisionColor: MapColor;
+  areaColor: MapColor;
   shade: Shade & { ranges?: RangeStyle };
   legendTitle: string;
-  stats: Fields; // shown for the county and each division
+  fields: Fields; // shown for each area
 }
 
-// Pima County, and its census county divisions shaded by a statistic. The
-// divisions are drawn over the county once it's selected, with a legend.
-function CountyDivisions({
-  county,
-  divisions,
+const countyFields = renderFields([["NAMELSAD", "County"]]);
+
+// Pima County, and areas within it shaded by a statistic. The areas are drawn
+// over the county once it's selected, with a legend. There are thousands, too
+// many to list in the county's details, so only they link back to it.
+function CountyAreas({
+  areas,
+  title,
   countyColor,
-  divisionColor,
+  areaColor,
   shade,
   legendTitle,
-  stats,
-}: CountyDivisionsProps) {
-  const nested = useNested("county", "divisions");
-  const countyFields = renderFields([["NAMELSAD", "County"], ...stats]);
-  const divisionFields = renderFields([["NAME", "Division"], ...stats]);
+  fields,
+}: CountyAreasProps) {
+  const nested = useNested("county", "areas");
+  const areaFields = renderFields(fields);
 
   return (
     <>
       <AreaLayer
         id="county"
-        {...tiles(county)}
+        {...tiles("pima_county")}
         color={countyColor}
         title="County"
         renderTooltip={countyFields}
-        renderDialog={withLinks(
-          countyFields,
-          <ChildLinks
-            layerId="divisions"
-            nameKey="NAME"
-            heading="County divisions"
-            color={divisionColor}
-          />,
-        )}
+        renderDialog={withSnippet(countyFields)}
         zIndex={0}
-        // Its highlight goes under the divisions drawn over it
+        // Its highlight goes under the areas drawn over it
         highlightZIndex={0.5}
-        // Only outlined while its shaded divisions are drawn over it, so its
-        // fill doesn't throw off their shades
+        // Only outlined while its shaded areas are drawn over it, so its fill
+        // doesn't throw off their shades
         fill={!nested.parentOpen}
       />
       <AreaLayer
-        id="divisions"
-        {...tiles(divisions)}
-        color={divisionColor}
-        title="County divisions"
+        id="areas"
+        {...tiles(areas)}
+        color={areaColor}
+        title={title}
         shade={shade}
         nested
         visible={nested.childVisible}
         interactive={nested.childInteractive}
-        renderTooltip={divisionFields}
-        renderDialog={withLinks(
-          divisionFields,
-          <ParentLink
-            hit={nested.parentHit}
-            nameKey="NAMELSAD"
-            color={countyColor}
-          />,
+        renderTooltip={areaFields}
+        renderDialog={withSnippet(
+          withLinks(
+            areaFields,
+            <ParentLink
+              hit={nested.parentHit}
+              nameKey="NAMELSAD"
+              color={countyColor}
+            />,
+          ),
         )}
         zIndex={1}
       />
@@ -118,9 +117,9 @@ function CountyDivisions({
           <ShadeLegend
             title={legendTitle}
             shade={shade}
-            color={divisionColor}
+            color={areaColor}
             ranges={shade.ranges}
-            layerId="divisions"
+            layerId="areas"
           />
         )}
       </MapLegend>
@@ -128,86 +127,57 @@ function CountyDivisions({
   );
 }
 
-export const PimaPopulation: Story = {
-  name: "Pima population (shaded divisions)",
+export const ChoroplethWithinArea: Story = {
+  name: "Choropleth within a selected area",
   parameters: {
     description:
-      "Maps › Population: click the county to draw its divisions, shaded by population with compact legend ranges (10K–50K).",
+      "Sample maps › Protected lands: click the county to draw its protected lands, shaded by acreage with compact legend ranges (1K–10K).",
   },
   render: () => (
     <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
-      <CountyDivisions
-        county="pima_county_population"
-        divisions="pima_ccd_population"
+      <CountyAreas
+        areas="protected-lands-pima-county"
+        title="Protected lands"
         countyColor="iris"
-        divisionColor="amber"
+        areaColor="grass"
         shade={{
-          key: "gpe_alln_total_pop",
-          steps: [10_000, 50_000, 250_000],
+          key: "ACRES_GIS",
+          steps: [10, 100, 1_000, 10_000],
           ranges: "compact",
         }}
-        legendTitle="Population"
-        stats={[
-          ["gpe_alln_total_pop", "Population"],
-          ["gpe_alln_medianage_yrs", "Median age"],
+        legendTitle="Acres"
+        fields={[
+          ["ONAME1", "Property"],
+          ["OWNER", "Owner"],
+          ["ACRES_GIS", "Acres"],
         ]}
       />
     </StoryMap>
   ),
 };
 
-export const PimaForeignBorn: Story = {
-  name: "Pima foreign-born (no data hatching)",
+export const ChoroplethNoData: Story = {
+  name: "Choropleth with no-data hatching",
   parameters: {
     description:
-      "Maps › Foreign-born: only two divisions have data. With `noData`, the rest are hatched, and the legend gets a no data entry.",
+      "Sample maps › Subdivisions: click the county to draw its subdivisions, shaded by lot count. With `noData`, the few without a count are hatched (zoom in to see them), and the legend gets a no data entry.",
   },
   render: () => (
     <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
-      <CountyDivisions
-        county="pima_county_foreign_born"
-        divisions="pima_ccd_foreign_born"
+      <CountyAreas
+        areas="pima_subdivisions"
+        title="Subdivisions"
         countyColor="cyan"
-        divisionColor="orange"
+        areaColor="orange"
         shade={{
-          key: "fbe_total_pop",
-          steps: [10_000, 50_000],
+          key: "LOT_COUNT",
+          steps: [10, 50, 250],
           noData: true,
-          ranges: "compact",
         }}
-        legendTitle="Foreign-born"
-        stats={[
-          ["fbe_total_pop", "Foreign-born"],
-          ["fbe_la_pop", "Born in Latin America"],
-        ]}
-      />
-    </StoryMap>
-  ),
-};
-
-export const PimaChildren: Story = {
-  name: "Pima children",
-  parameters: {
-    description:
-      "Maps › Children: the same county and divisions, shaded by children under 18, with no data for two divisions.",
-  },
-  render: () => (
-    <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
-      <CountyDivisions
-        county="pima_county_children"
-        divisions="pima_ccd_children"
-        countyColor="blue"
-        divisionColor="crimson"
-        shade={{
-          key: "cce_total_under18",
-          steps: [10_000, 50_000],
-          noData: true,
-          ranges: "compact",
-        }}
-        legendTitle="Children under 18"
-        stats={[
-          ["cce_total_under18", "Under 18"],
-          ["cce_2ph_under18", "With two parents"],
+        legendTitle="Lots"
+        fields={[
+          ["SUB_NAME", "Subdivision"],
+          ["LOT_COUNT", "Lots"],
         ]}
       />
     </StoryMap>
@@ -215,75 +185,84 @@ export const PimaChildren: Story = {
 };
 
 const schoolTooltip = renderFields([
-  ["Name", "Name"],
+  ["School", "Name"],
   ["Address", "Address"],
 ]);
 const schoolDetails = renderFields([
-  ["Name", "Name"],
-  ["District", "School district"],
+  ["School", "Name"],
+  ["Sector", "Sector"],
+  ["Type", "Type"],
+  ["Grades", "Grades"],
+  ["District", "District"],
+  ["County", "County"],
   ["Address", "Address"],
 ]);
-const districtFields = renderFields([["NAME", "School district"]]);
 
-// Schools without a district boundary of their own, such as colleges
-const otherSchools: FeatureFilter = (school) =>
-  school.District == null ||
-  school.District === "PIMA ACCOMMODATION SCHOOL DISTRICT";
+// Bureau of Indian Affairs schools, run on tribal lands rather than by a
+// county's districts
+const isBia: FeatureFilter = (school) => school.Sector === "BIA";
 
 function PimaSchoolLayers() {
-  const nested = useNested("school-districts", "schools");
-  const ofDistrict = useParentMatch(nested.parentHit, "District", "District");
+  const nested = useNested("county", "schools");
+  const inCounty = useParentMatch(nested.parentHit, "County", "NAME");
+  // The selected county's schools, less those the BIA layer always draws
+  const ofCounty = useMemo<FeatureFilter>(
+    () => (school) => inCounty(school) && !isBia(school),
+    [inCounty],
+  );
 
   return (
     <>
       <AreaLayer
-        {...tiles("pima_county_population")}
+        url={GEOJSON.arizonaBoundary}
         color="gray"
         interactive={false}
         zIndex={0}
       />
       <AreaLayer
-        id="school-districts"
-        {...tiles("pima_school_districts")}
+        id="county"
+        {...tiles("pima_county")}
         color="jade"
-        title="School districts"
-        renderTooltip={districtFields}
-        renderDialog={withLinks(
-          districtFields,
-          <ChildLinks
-            layerId="schools"
-            nameKey="Name"
-            heading="Schools"
-            color="orange"
-          />,
+        title="County"
+        renderTooltip={countyFields}
+        renderDialog={withSnippet(
+          withLinks(
+            countyFields,
+            <ChildLinks
+              layerId="schools"
+              nameKey="School"
+              heading="Schools"
+              color="orange"
+            />,
+          ),
         )}
         zIndex={1}
         highlightZIndex={1.5}
       />
       <AreaLayer
         id="schools"
-        url={POINTS.tucsonSchools}
+        url={POINTS.arizonaSchools}
         cluster
         color="orange"
         title="Schools"
         nested
         visible={nested.childVisible}
         interactive={nested.childInteractive}
-        filter={ofDistrict}
+        filter={ofCounty}
         renderTooltip={schoolTooltip}
         renderDialog={withLinks(
           schoolDetails,
-          <ParentLink hit={nested.parentHit} nameKey="NAME" color="jade" />,
+          <ParentLink hit={nested.parentHit} nameKey="NAMELSAD" color="jade" />,
         )}
         zIndex={2}
       />
       <AreaLayer
-        id="other-schools"
-        url={POINTS.tucsonSchools}
+        id="bia-schools"
+        url={POINTS.arizonaSchools}
         cluster
         color="plum"
-        title="Colleges and other schools"
-        filter={otherSchools}
+        title="Bureau of Indian Affairs schools"
+        filter={isBia}
         renderTooltip={schoolTooltip}
         renderDialog={schoolDetails}
         zIndex={3}
@@ -292,14 +271,14 @@ function PimaSchoolLayers() {
   );
 }
 
-export const PimaSchools: Story = {
-  name: "Pima schools (filtered children)",
+export const FilteredDotsWithinArea: Story = {
+  name: "Filtered dots within a selected area",
   parameters: {
     description:
-      "Maps › Schools: click a district to draw its schools, matched by district name with a `filter`, as clustered dots. A second layer filters the same file to schools without a district, always shown.",
+      "Sample maps › Schools: click Pima County to draw its schools, matched by county name with a `filter`, as clustered dots. A second layer filters the same file to the Bureau of Indian Affairs schools, always shown, which the first leaves out.",
   },
   render: () => (
-    <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
+    <StoryMap {...ARIZONA}>
       <PimaSchoolLayers />
     </StoryMap>
   ),
@@ -309,24 +288,6 @@ const stateFields = renderFields([
   ["NAME", "State"],
   ["Organizations", "Organizations"],
 ]);
-const organizationTooltip = renderFields([
-  ["Organization Name", "Name"],
-  ["City", "City"],
-]);
-const organizationDetails = renderFields([
-  ["Organization Name", "Name"],
-  ["Type", "Type"],
-  ["City", "City"],
-  ["Founded", "Founded"],
-  ["Address", "Address"],
-  ["Website", "Website"],
-]);
-// Heads a selected state's details with its name, in place of "States"
-const stateTitle = (features: FeatureProps[]) =>
-  features.length === 1 && features[0].NAME
-    ? String(features[0].NAME)
-    : undefined;
-
 const ORGANIZATION_SHADE: Shade = {
   key: "Organizations",
   // None, 1, 2–4, 5–12 and 13 or more
@@ -335,9 +296,6 @@ const ORGANIZATION_SHADE: Shade = {
 };
 
 function UsOrganizationLayers() {
-  const nested = useNested("states", "organizations");
-  const ofState = useParentMatch(nested.parentHit, "State", "STUSPS");
-
   return (
     <>
       <AreaLayer
@@ -348,35 +306,11 @@ function UsOrganizationLayers() {
         title="States"
         featureTitle={stateTitle}
         renderTooltip={stateFields}
-        renderDialog={withLinks(
-          stateFields,
-          <ChildLinks
-            layerId="organizations"
-            nameKey="Organization Name"
-            heading="Folklórico organizations"
-            color="crimson"
-          />,
-        )}
+        renderDialog={withSnippet(withLinks(stateFields, <OrganizationLinks />))}
         zIndex={0}
         highlightZIndex={0.5}
       />
-      <MarkerLayer
-        id="organizations"
-        url={POINTS.usOrganizations}
-        cluster
-        pin={PapelPicadoPin}
-        pinAnchor={PAPEL_PICADO_PIN_ANCHOR}
-        color="crimson"
-        title="Folklórico organizations"
-        visible={nested.childVisible}
-        interactive={nested.childInteractive}
-        filter={ofState}
-        renderTooltip={organizationTooltip}
-        renderDialog={withLinks(
-          organizationDetails,
-          <ParentLink hit={nested.parentHit} nameKey="NAME" color="iris" />,
-        )}
-      />
+      <StateOrganizations statesId="states" stateColor="iris" />
       <MapLegend>
         <ShadeLegend
           title="Organizations"
@@ -389,8 +323,8 @@ function UsOrganizationLayers() {
   );
 }
 
-export const UsOrganizations: Story = {
-  name: "US organizations (shaded states, clustered custom pins)",
+export const ChoroplethWithClusteredPins: Story = {
+  name: "Choropleth with clustered pins within",
   parameters: {
     description:
       "Sample maps › US organizations: states shaded by organization count (`emptyLowest` for none), headed by the state's name with `featureTitle`. Click one for its organizations, as clustered papel picado pins.",

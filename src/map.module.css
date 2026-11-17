@@ -73,6 +73,15 @@
   min-block-size: 0;
 }
 
+/* Radix's ScrollArea wraps its content in a display: table div, which grows
+   to fit the widest content (a long word, a code line) past the panel's
+   width, where the vertical-only scroll area clips it. Held to the panel's
+   width, the content wraps or scrolls within it. */
+.panelBody :global(.rt-ScrollAreaViewport) > div {
+  display: block !important;
+  max-inline-size: 100%;
+}
+
 /* Below the zoom buttons, where OpenLayers puts its own zoom-to-extent
    control, and framed and sized like them (ol.css' .ol-control and its
    buttons). Under the tooltip and details panel. */

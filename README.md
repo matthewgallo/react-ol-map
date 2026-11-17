@@ -6,7 +6,7 @@ Interactive [OpenLayers](https://openlayers.org/) maps for React, styled with [R
 
 ## Screenshots
 
-From the sample maps in [folklorico](https://github.com/matthewgallo/folklorico).
+From the sample maps of folklorico, the site this package was extracted from.
 
 | | |
 | --- | --- |
@@ -201,11 +201,11 @@ yarn test     # also: yarn lint, yarn typecheck, yarn build
 yarn storybook   # http://localhost:6006
 ```
 
-The stories recreate each of [folklorico](https://github.com/matthewgallo/folklorico)'s maps with its own data, grouped by what they show: areas, pins, clustering, and layers drawn within a selected feature of another (with shading and legends). Each story says which folklorico map it is. The toolbar switches the theme and the language of the map's own text.
+The stories recreate folklorico's sample maps with their data, grouped by what they show: areas, pins, clustering, and layers drawn within a selected feature of another (with shading and legends). Each story says which sample map it's drawn from. The toolbar switches the theme and the language of the map's own text.
 
 For the basemap, copy `.env.example` to `.env.local` and add a CARTO API key as `VITE_MAP_KEY`; without one, CARTO draws "API KEY REQUIRED" tiles. `.env.local` is gitignored, but the key is visible in the browser's tile requests to anyone viewing Storybook, so restrict it to your domains in CARTO if you can.
 
-Storybook serves the data from folklorico's `public/data`, so clone folklorico next to this repository (`../folklorico`). Storybook says so if it's missing. The stories import the package's source, so changes show without a build.
+The stories' data is in [`stories/data`](stories/data), copied from folklorico's sample maps and served at `/data`, so Storybook needs nothing else checked out. To add a dataset, put GeoJSON in `geojson/` or `points/`, or a [PMTiles](https://docs.protomaps.com/pmtiles/) archive in `tiles/`. The stories import the package's source, so changes show without a build.
 
 ## Releasing
 

@@ -12,7 +12,7 @@ import {
 } from "../../src";
 
 // How folklorico's maps page draws a layer within another's features, such as
-// a county's divisions or a district's schools (LayerConfig.parent in its
+// a county's schools or a state's organizations (LayerConfig.parent in its
 // src/maps/types.ts). Built from the package's useFeatureMap and
 // useLastSelected; render the layers in a component inside FeatureMap.
 
@@ -33,7 +33,7 @@ export function useNested(parentId: string, childId: string) {
 }
 
 // Only the child features whose `key` equals the selected parent feature's
-// `parentKey`, such as the schools of the selected district. Memoized, as a
+// `parentKey`, such as the schools of the selected county. Memoized, as a
 // new filter restyles the layer.
 export function useParentMatch(
   parentHit: Hit | undefined,
