@@ -2,6 +2,9 @@ import { addons } from "storybook/manager-api";
 import { GLOBALS_UPDATED, SET_GLOBALS } from "storybook/internal/core-events";
 import { appearanceOf, storybookTheme } from "./appearance";
 
+// Light, with the sidebar's version, until the preview sends the globals
+addons.setConfig({ theme: storybookTheme("light") });
+
 // Themes Storybook's own UI (sidebar, toolbar, panels) from the toolbar's
 // Theme, as the stories and docs pages are in preview.tsx
 addons.register("appearance", (api) => {
