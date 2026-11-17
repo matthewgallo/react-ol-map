@@ -2,6 +2,19 @@
 
 Interactive [OpenLayers](https://openlayers.org/) maps for React, styled with [Radix Themes](https://www.radix-ui.com/themes). Built on [react-openlayers](https://www.npmjs.com/package/react-openlayers).
 
+![States shaded by organization count, with a legend and the hovered state's tooltip](docs/images/shading-legend.png)
+
+## Screenshots
+
+From the sample maps in [folklorico](https://github.com/matthewgallo/folklorico).
+
+| | |
+| --- | --- |
+| ![Texas selected: its organizations listed in the side panel and drawn as clustered pins within it](docs/images/selected-feature.png) | ![Arizona libraries clustered into counted badges](docs/images/clustering.png) |
+| **Selection:** clicking a state opens its details and draws the layer within it | **Clustering:** nearby points drawn as one badge with their count |
+| ![Protected lands and subdivisions stacked over a county, with a tooltip on hover](docs/images/layers-tooltip.png) | ![Tucson landmarks over neighborhoods in dark mode, with a tooltip on a hovered pin](docs/images/dark-markers.png) |
+| **Layers:** areas stacked on one map, each with its own tooltip | **Dark mode:** the basemap and layer colors follow the theme |
+
 ## Install
 
 The package is published to GitHub Packages, which needs a token even for public packages. Point the `@matthewgallo` scope at it in your project's `.npmrc`:
