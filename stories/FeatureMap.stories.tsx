@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AreaLayer, MarkerLayer, type Appearance } from "../src";
 import { BOUNDS, CENTERS, selectOf } from "./support/controls";
 import { renderFields } from "./support/fields";
-import { GEOJSON, PIMA_COUNTY_BOUNDS, TUCSON, tiles } from "./support/places";
+import { GEOJSON, tiles } from "./support/places";
 import { StoryMap } from "./support/story-map";
 
 // FeatureMap's own options. Use the toolbar to switch the theme, which the
@@ -119,9 +119,9 @@ export const FitToBounds: Story = {
       "Fitted to Pima County with `bounds`, as the protected lands and land use sample maps open. The county is a display-only layer (`interactive={false}`).",
   },
   render: () => (
-    <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
+    <StoryMap bounds={[-113.3339, 31.4261, -110.4477, 32.5142]}>
       <AreaLayer
-        {...tiles("pima_county")}
+        tiles={{ url: "data/tiles/pima_county.pmtiles" }}
         color="gray"
         interactive={false}
       />
@@ -134,9 +134,14 @@ export const WithoutControls: Story = {
     description: "`fullScreen={false}` and `resetView={false}`.",
   },
   render: () => (
-    <StoryMap {...TUCSON} fullScreen={false} resetView={false}>
+    <StoryMap
+      center={[-110.926, 32.2217]}
+      zoom={10}
+      fullScreen={false}
+      resetView={false}
+    >
       <AreaLayer
-        url={GEOJSON.tucsonCityLimits}
+        url="data/geojson/tucson_city_limits.json"
         color="gray"
         interactive={false}
       />
@@ -150,7 +155,7 @@ export const LoadError: Story = {
       "A layer whose `url` fails to load shows the map's load error message (translated with the Language toolbar).",
   },
   render: () => (
-    <StoryMap {...TUCSON}>
+    <StoryMap center={[-110.926, 32.2217]} zoom={10}>
       <AreaLayer url="data/geojson/missing.json" color="red" />
     </StoryMap>
   ),

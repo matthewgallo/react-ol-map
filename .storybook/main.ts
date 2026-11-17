@@ -4,10 +4,15 @@ import type { StorybookConfig } from "@storybook/react-vite";
 // The stories' data, copied from folklorico's public/data and served as /data
 // like the site does
 const data = fileURLToPath(new URL("../stories/data", import.meta.url));
+// The README's screenshots, for the Welcome page
+const images = fileURLToPath(new URL("../docs/images", import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ["../stories/**/*.stories.tsx"],
-  staticDirs: [{ from: data, to: "/data" }],
+  stories: ["../stories/**/*.mdx", "../stories/**/*.stories.tsx"],
+  staticDirs: [
+    { from: data, to: "/data" },
+    { from: images, to: "/images" },
+  ],
   // For the Code panel beside Controls (docs.codePanel in preview.tsx)
   addons: ["@storybook/addon-docs"],
   core: { disableTelemetry: true },

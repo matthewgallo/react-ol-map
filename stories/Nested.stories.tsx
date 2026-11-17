@@ -130,8 +130,9 @@ function CountyAreas({
 export const ChoroplethWithinArea: Story = {
   name: "Choropleth within a selected area",
   parameters: {
+    sampleMap: "Protected lands",
     description:
-      "Sample maps › Protected lands: click the county to draw its protected lands, shaded by acreage with compact legend ranges (1K–10K).",
+      "Click the county to draw its protected lands, shaded by acreage with compact legend ranges (1K–10K).",
   },
   render: () => (
     <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
@@ -159,8 +160,9 @@ export const ChoroplethWithinArea: Story = {
 export const ChoroplethNoData: Story = {
   name: "Choropleth with no-data hatching",
   parameters: {
+    sampleMap: "Subdivisions",
     description:
-      "Sample maps › Subdivisions: click the county to draw its subdivisions, shaded by lot count. With `noData`, the few without a count are hatched (zoom in to see them), and the legend gets a no data entry.",
+      "Click the county to draw its subdivisions, shaded by lot count. With `noData`, the few without a count are hatched (zoom in to see them), and the legend gets a no data entry.",
   },
   render: () => (
     <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
@@ -274,8 +276,9 @@ function PimaSchoolLayers() {
 export const FilteredDotsWithinArea: Story = {
   name: "Filtered dots within a selected area",
   parameters: {
+    sampleMap: "Schools",
     description:
-      "Sample maps › Schools: click Pima County to draw its schools, matched by county name with a `filter`, as clustered dots. A second layer filters the same file to the Bureau of Indian Affairs schools, always shown, which the first leaves out.",
+      "Click Pima County to draw its schools, matched by county name with a `filter`, as clustered dots. A second layer filters the same file to the Bureau of Indian Affairs schools, always shown, which the first leaves out.",
   },
   render: () => (
     <StoryMap {...ARIZONA}>
@@ -326,8 +329,9 @@ function UsOrganizationLayers() {
 export const ChoroplethWithClusteredPins: Story = {
   name: "Choropleth with clustered pins within",
   parameters: {
+    sampleMap: "US organizations",
     description:
-      "Sample maps › US organizations: states shaded by organization count (`emptyLowest` for none), headed by the state's name with `featureTitle`. Click one for its organizations, as clustered papel picado pins.",
+      "States shaded by organization count (`emptyLowest` for none), headed by the state's name with `featureTitle`. Click one for its organizations, as clustered papel picado pins.",
   },
   render: () => (
     <StoryMap bounds={CONTIGUOUS_US_BOUNDS}>

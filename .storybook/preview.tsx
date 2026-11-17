@@ -1,12 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Preview, StoryContext } from "@storybook/react-vite";
-import { Text, Theme } from "@radix-ui/themes";
+import {
+  DocsContainer,
+  type DocsContainerProps,
+} from "@storybook/addon-docs/blocks";
+import { GLOBALS_UPDATED, SET_GLOBALS } from "storybook/internal/core-events";
+import { Theme } from "@radix-ui/themes";
+import { appearanceOf, storybookTheme, type Appearance } from "./appearance";
 import { LocaleContext, type Locale } from "../stories/support/locale";
 import { storySource } from "./source";
+import { StoryLayout } from "./story-layout";
 
 import "@radix-ui/themes/styles.css";
-
-type Appearance = "light" | "dark";
 
 // folklorico's Theme (src/main.tsx), in the toolbar's appearance. The map
 // follows the "dark" class on <html>, as next-themes sets it on the site.
@@ -26,10 +31,40 @@ function SiteTheme({
       accentColor="crimson"
       grayColor="sand"
       radius="large"
+      // Fills the canvas below the story with the theme's background
+      style={{ minHeight: "100vh" }}
     >
       {children}
     </Theme>
   );
+}
+
+// Docs pages (Welcome) in Storybook's light or dark theme, following the
+// toolbar's Theme. Decorators don't run on docs pages, so this listens for the
+// globals itself.
+function ThemedDocsContainer(props: DocsContainerProps) {
+  const { channel } = props.context;
+  const [appearance, setAppearance] = useState<Appearance>(() =>
+    appearanceOf(
+      // The globals so far; not in DocsContextProps' type
+      (
+        props.context as {
+          store?: { userGlobals?: { get(): Record<string, unknown> } };
+        }
+      ).store?.userGlobals?.get(),
+    ),
+  );
+  useEffect(() => {
+    const update = ({ globals }: { globals?: Record<string, unknown> }) =>
+      setAppearance(appearanceOf(globals));
+    channel.on(SET_GLOBALS, update);
+    channel.on(GLOBALS_UPDATED, update);
+    return () => {
+      channel.off(SET_GLOBALS, update);
+      channel.off(GLOBALS_UPDATED, update);
+    };
+  }, [channel]);
+  return <DocsContainer {...props} theme={storybookTheme(appearance)} />;
 }
 
 const preview: Preview = {
@@ -68,6 +103,7 @@ const preview: Preview = {
     // `transform` on a rendered ("dynamic") snippet, so it's given the
     // story's original source in place of its rendered tree.
     docs: {
+      container: ThemedDocsContainer,
       codePanel: true,
       source: {
         type: "dynamic",
@@ -76,9 +112,11 @@ const preview: Preview = {
       },
     },
     options: {
-      // Components with their playgrounds first, then folklorico's maps
+      // The Welcome page, components with their playgrounds, then
+      // folklorico's maps
       storySort: {
         order: [
+          "Welcome",
           "FeatureMap",
           "AreaLayer",
           "MarkerLayer",
@@ -91,19 +129,16 @@ const preview: Preview = {
     },
   },
   decorators: [
-    // A story's `description` parameter, such as which folklorico map it
-    // shows, goes above it
-    (Story, { globals, parameters }) => (
-      <LocaleContext value={globals.locale as Locale}>
-        <SiteTheme appearance={globals.appearance as Appearance}>
-          <div style={{ padding: 16, maxWidth: 960, marginInline: "auto" }}>
-            {parameters.description && (
-              <Text as="p" size="2" color="gray" mb="3">
-                {parameters.description}
-              </Text>
-            )}
+    // Each story in the shared page layout: header, description, map, code
+    (Story, context) => (
+      <LocaleContext value={context.globals.locale as Locale}>
+        <SiteTheme appearance={appearanceOf(context.globals)}>
+          <StoryLayout
+            context={context}
+            appearance={appearanceOf(context.globals)}
+          >
             <Story />
-          </div>
+          </StoryLayout>
         </SiteTheme>
       </LocaleContext>
     ),

@@ -9,7 +9,6 @@ export const TUCSON_CITY_BOUNDS: Bounds = [-111.0588, 31.9905, -110.7062, 32.320
 export const CONTIGUOUS_US_BOUNDS: Bounds = [-124.8, 24.4, -66.9, 49.4];
 
 export const ARIZONA = { center: [-111.7, 34.2] as [number, number], zoom: 6 };
-export const TUCSON = { center: [-110.926, 32.2217] as [number, number], zoom: 10 };
 
 // Vector tiles, loaded for what's in view
 export const tiles = (name: string) => ({

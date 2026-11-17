@@ -1,13 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { DataList, Text } from "@radix-ui/themes";
 import { AreaLayer } from "../src";
-import { renderFields } from "./support/fields";
-import { withSnippet } from "./support/render-snippet";
-import { GEOJSON, PIMA_COUNTY_BOUNDS, TUCSON, tiles } from "./support/places";
 import { StoryMap } from "./support/story-map";
 
 // AreaLayer: polygons filled in a Radix color, over display-only boundaries,
-// as folklorico's sample maps draw them. Their details end with a snippet showing
-// how renderDialog gets all of an area's data.
+// as folklorico's sample maps draw them. Each story's render is written as a
+// consumer would write it (literal URLs, views and tooltips, no story
+// helpers), since it's shown as the story's code (see .storybook/source.ts).
 const meta = {
   title: "Areas",
   component: StoryMap,
@@ -17,48 +16,31 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const CityLimits = () => (
-  <AreaLayer
-    url={GEOJSON.tucsonCityLimits}
-    color="gray"
-    interactive={false}
-    zIndex={0}
-  />
-);
-
-// Display-only county outline
-const County = () => (
-  <AreaLayer
-    {...tiles("pima_county")}
-    color="gray"
-    interactive={false}
-    zIndex={0}
-  />
-);
-
-const neighborhood = renderFields([["NAME", "Neighborhood"]]);
-const subdivision = renderFields([["SUB_NAME", "Subdivision"]]);
-const protectedLand = renderFields([
-  ["ONAME1", "Property"],
-  ["OWNER", "Owner"],
-  ["DEPT", "Department"],
-]);
-
 export const AdjoiningAreas: Story = {
   name: "Adjoining areas",
   parameters: {
-    description:
-      "Sample maps › Tucson neighborhoods: tile areas over the display-only GeoJSON city limits.",
+    sampleMap: "Tucson neighborhoods",
+    description: "Tile areas over the display-only GeoJSON city limits.",
   },
   render: () => (
-    <StoryMap {...TUCSON}>
-      <CityLimits />
+    <StoryMap center={[-110.926, 32.2217]} zoom={10}>
       <AreaLayer
-        {...tiles("tucson_neighborhoods")}
+        url="data/geojson/tucson_city_limits.json"
+        color="gray"
+        interactive={false}
+        zIndex={0}
+      />
+      <AreaLayer
+        tiles={{ url: "data/tiles/tucson_neighborhoods.pmtiles" }}
         color="violet"
         title="Neighborhoods"
-        renderTooltip={neighborhood}
-        renderDialog={withSnippet(neighborhood)}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.NAME)}
+            </Text>
+          ))
+        }
         zIndex={1}
       />
     </StoryMap>
@@ -68,18 +50,29 @@ export const AdjoiningAreas: Story = {
 export const ThousandsOfAreas: Story = {
   name: "Thousands of small areas",
   parameters: {
+    sampleMap: "Subdivisions",
     description:
-      "Sample maps › Subdivisions: thousands of small tile areas, loaded only for what's in view.",
+      "Thousands of small tile areas, loaded only for what's in view.",
   },
   render: () => (
-    <StoryMap {...TUCSON}>
-      <CityLimits />
+    <StoryMap center={[-110.926, 32.2217]} zoom={10}>
       <AreaLayer
-        {...tiles("pima_subdivisions")}
+        url="data/geojson/tucson_city_limits.json"
+        color="gray"
+        interactive={false}
+        zIndex={0}
+      />
+      <AreaLayer
+        tiles={{ url: "data/tiles/pima_subdivisions.pmtiles" }}
         color="blue"
         title="Subdivisions"
-        renderTooltip={subdivision}
-        renderDialog={withSnippet(subdivision)}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.SUB_NAME)}
+            </Text>
+          ))
+        }
         zIndex={1}
       />
     </StoryMap>
@@ -89,49 +82,94 @@ export const ThousandsOfAreas: Story = {
 export const ScatteredAreas: Story = {
   name: "Scattered areas",
   parameters: {
+    sampleMap: "Protected lands",
     description:
-      "Sample maps › Protected lands: tile areas over a display-only county outline.",
+      "Tile areas over a display-only county outline. Click one for its owner and department in the details.",
   },
   render: () => (
-    <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
-      <County />
+    <StoryMap bounds={[-113.3339, 31.4261, -110.4477, 32.5142]}>
       <AreaLayer
-        {...tiles("protected-lands-pima-county")}
+        tiles={{ url: "data/tiles/pima_county.pmtiles" }}
+        color="gray"
+        interactive={false}
+        zIndex={0}
+      />
+      <AreaLayer
+        tiles={{ url: "data/tiles/protected-lands-pima-county.pmtiles" }}
         color="grass"
         title="Protected lands"
-        renderTooltip={protectedLand}
-        renderDialog={withSnippet(protectedLand)}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.ONAME1)}
+            </Text>
+          ))
+        }
+        renderDialog={(features) =>
+          features.map((feature, i) => (
+            <DataList.Root key={i} size="1">
+              <DataList.Item>
+                <DataList.Label>Property</DataList.Label>
+                <DataList.Value>{String(feature.ONAME1)}</DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>Owner</DataList.Label>
+                <DataList.Value>{String(feature.OWNER)}</DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>Department</DataList.Label>
+                <DataList.Value>{String(feature.DEPT)}</DataList.Value>
+              </DataList.Item>
+            </DataList.Root>
+          ))
+        }
         zIndex={1}
       />
     </StoryMap>
   ),
 };
 
-// Several area layers overlaid, each with its own color, tooltip and details.
-// zIndex keeps them in order, as same-zIndex layers draw in the order added.
+// Several area layers overlaid, each with its own color and tooltip. zIndex
+// keeps them in order, as same-zIndex layers draw in the order added.
 export const StackedAreaLayers: Story = {
   name: "Stacked area layers",
   parameters: {
+    sampleMap: "Land use",
     description:
-      "Sample maps › Land use: two tile area layers stacked with `zIndex` over a display-only county. Hover where they overlap: the top-most feature wins.",
+      "Two tile area layers stacked with `zIndex` over a display-only county. Hover where they overlap: the top-most feature wins.",
   },
   render: () => (
-    <StoryMap bounds={PIMA_COUNTY_BOUNDS}>
-      <County />
+    <StoryMap bounds={[-113.3339, 31.4261, -110.4477, 32.5142]}>
       <AreaLayer
-        {...tiles("protected-lands-pima-county")}
+        tiles={{ url: "data/tiles/pima_county.pmtiles" }}
+        color="gray"
+        interactive={false}
+        zIndex={0}
+      />
+      <AreaLayer
+        tiles={{ url: "data/tiles/protected-lands-pima-county.pmtiles" }}
         color="grass"
         title="Protected lands"
-        renderTooltip={protectedLand}
-        renderDialog={withSnippet(protectedLand)}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.ONAME1)}
+            </Text>
+          ))
+        }
         zIndex={1}
       />
       <AreaLayer
-        {...tiles("pima_subdivisions")}
+        tiles={{ url: "data/tiles/pima_subdivisions.pmtiles" }}
         color="blue"
         title="Subdivisions"
-        renderTooltip={subdivision}
-        renderDialog={withSnippet(subdivision)}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.SUB_NAME)}
+            </Text>
+          ))
+        }
         zIndex={2}
       />
     </StoryMap>

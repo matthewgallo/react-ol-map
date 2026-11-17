@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { DataList, Text } from "@radix-ui/themes";
 import { AreaLayer, MarkerLayer } from "../src";
-import { renderFields } from "./support/fields";
 import {
   PAPEL_PICADO_PIN_ANCHOR,
   PapelPicadoPin,
 } from "./support/papel-picado-pin";
-import { ARIZONA, GEOJSON, tiles } from "./support/places";
 import { StoryMap } from "./support/story-map";
 
-// MarkerLayer: points drawn as pins, above every area layer
+// MarkerLayer: points drawn as pins, above every area layer. Renders are
+// written as a consumer would, since they're shown as the story's code.
 const meta = {
   title: "Pins",
   component: StoryMap,
@@ -18,72 +18,99 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const CityLimits = () => (
-  <AreaLayer
-    url={GEOJSON.tucsonCityLimits}
-    color="gray"
-    interactive={false}
-  />
-);
-
-const ArizonaBoundary = () => (
-  <AreaLayer
-    url={GEOJSON.arizonaBoundary}
-    color="gray"
-    interactive={false}
-  />
-);
-
 export const PinsWithDetails: Story = {
   name: "Pins with details",
   parameters: {
+    sampleMap: "Arizona organizations",
     description:
-      "Sample maps › Arizona organizations: tile pins across the state, opened with `center` and `zoom`. Their details (click one) show more than their tooltip, with `renderDialog`.",
+      "Tile pins across the state, opened with `center` and `zoom`. Their details (click one) show more than their tooltip, with `renderDialog`.",
   },
   render: () => (
-    <StoryMap {...ARIZONA}>
-      <ArizonaBoundary />
+    <StoryMap center={[-111.7, 34.2]} zoom={6}>
+      <AreaLayer
+        url="data/geojson/arizona_boundary.json"
+        color="gray"
+        interactive={false}
+      />
       <MarkerLayer
-        {...tiles("arizona_folklorico_organizations")}
+        tiles={{ url: "data/tiles/arizona_folklorico_organizations.pmtiles" }}
         color="crimson"
         title="Folklórico organizations"
-        renderTooltip={renderFields([
-          ["Organization Name", "Name"],
-          ["City", "City"],
-        ])}
-        renderDialog={renderFields([
-          ["Organization Name", "Name"],
-          ["Type", "Type"],
-          ["City", "City"],
-          ["Founded", "Founded"],
-          ["Address", "Address"],
-          ["Website/Contact Reference", "Website"],
-        ])}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature["Organization Name"])}, {String(feature.City)}
+            </Text>
+          ))
+        }
+        renderDialog={(features) =>
+          features.map((feature, i) => (
+            <DataList.Root key={i} size="1">
+              <DataList.Item>
+                <DataList.Label>Name</DataList.Label>
+                <DataList.Value>
+                  {String(feature["Organization Name"])}
+                </DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>Type</DataList.Label>
+                <DataList.Value>{String(feature.Type)}</DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>City</DataList.Label>
+                <DataList.Value>{String(feature.City)}</DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>Founded</DataList.Label>
+                <DataList.Value>{String(feature.Founded)}</DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>Address</DataList.Label>
+                <DataList.Value>{String(feature.Address)}</DataList.Value>
+              </DataList.Item>
+              <DataList.Item>
+                <DataList.Label>Website</DataList.Label>
+                <DataList.Value>
+                  {String(feature["Website/Contact Reference"])}
+                </DataList.Value>
+              </DataList.Item>
+            </DataList.Root>
+          ))
+        }
       />
     </StoryMap>
   ),
 };
 
-// A custom pin component, drawn on the map's canvas as an image
+// A custom pin component, drawn on the map's canvas as an image. Its code is
+// app code, imported in the story's snippet from ./papel-picado-pin.
 export const CustomPins: Story = {
   name: "Custom pins",
   parameters: {
+    sampleMap: "Arizona organizations",
     description:
-      "Sample maps › Arizona organizations: tile points drawn with a custom `pin` (folklorico's papel picado flag), anchored at its center with `pinAnchor`.",
+      "Tile points drawn with a custom `pin` (folklorico's papel picado flag), anchored at its center with `pinAnchor`.",
   },
   render: () => (
-    <StoryMap {...ARIZONA}>
-      <ArizonaBoundary />
+    <StoryMap center={[-111.7, 34.2]} zoom={6}>
+      <AreaLayer
+        url="data/geojson/arizona_boundary.json"
+        color="gray"
+        interactive={false}
+      />
       <MarkerLayer
-        {...tiles("arizona_folklorico_organizations")}
+        tiles={{ url: "data/tiles/arizona_folklorico_organizations.pmtiles" }}
         pin={PapelPicadoPin}
         pinAnchor={PAPEL_PICADO_PIN_ANCHOR}
         color="crimson"
         title="Folklórico organizations"
-        renderTooltip={renderFields([
-          ["Organization Name", "Name"],
-          ["Address", "Address"],
-        ])}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature["Organization Name"])}
+            </Text>
+          ))
+        }
       />
     </StoryMap>
   ),
@@ -93,27 +120,41 @@ export const CustomPins: Story = {
 export const PinsOverAreas: Story = {
   name: "Pins over areas",
   parameters: {
+    sampleMap: "Tucson landmarks",
     description:
-      "Sample maps › Tucson landmarks: GeoJSON pins over tile neighborhoods. A pin wins over the area beneath it.",
+      "GeoJSON pins over tile neighborhoods. A pin wins over the area beneath it.",
   },
   render: () => (
     <StoryMap center={[-110.975, 32.19]} zoom={12}>
-      <CityLimits />
       <AreaLayer
-        {...tiles("tucson_neighborhoods")}
+        url="data/geojson/tucson_city_limits.json"
+        color="gray"
+        interactive={false}
+      />
+      <AreaLayer
+        tiles={{ url: "data/tiles/tucson_neighborhoods.pmtiles" }}
         color="violet"
         title="Neighborhoods"
-        renderTooltip={renderFields([["NAME", "Neighborhood"]])}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.NAME)}
+            </Text>
+          ))
+        }
         zIndex={1}
       />
       <MarkerLayer
-        url={GEOJSON.tucsonLandmarks}
+        url="data/geojson/tucson_landmarks.json"
         color="cyan"
         title="Landmarks"
-        renderTooltip={renderFields([
-          ["name", "Name"],
-          ["established", "Established"],
-        ])}
+        renderTooltip={(features) =>
+          features.map((feature, i) => (
+            <Text key={i} as="p" size="2">
+              {String(feature.name)} (est. {String(feature.established)})
+            </Text>
+          ))
+        }
       />
     </StoryMap>
   ),

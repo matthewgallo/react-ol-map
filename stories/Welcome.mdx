@@ -1,0 +1,73 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Welcome" />
+
+# react-ol-map
+
+Interactive [OpenLayers](https://openlayers.org/) maps for React, styled with [Radix Themes](https://www.radix-ui.com/themes) and built on [react-openlayers](https://www.npmjs.com/package/react-openlayers). Stack area and marker layers on one map, and they share hover, selection, a details panel, clustering and shaded legends.
+
+![States shaded by organization count, with a legend and the hovered state's tooltip](images/shading-legend.png)
+
+## Install
+
+The package is published to GitHub Packages, which needs a token even for public packages. Point the `@matthewgallo` scope at it in your project's `.npmrc`:
+
+```ini
+@matthewgallo:registry=https://npm.pkg.github.com
+```
+
+Add a [personal access token (classic)](https://github.com/settings/tokens) with `read:packages` to your user `~/.npmrc`, then install:
+
+```bash
+echo "//npm.pkg.github.com/:_authToken=<token>" >> ~/.npmrc
+yarn add @matthewgallo/react-ol-map ol @radix-ui/themes
+```
+
+`react`, `react-dom` (19), `ol` and `@radix-ui/themes` are peer dependencies.
+
+## Setup
+
+Import the styles once, and render maps inside a Radix `Theme`, whose CSS variables color the layers:
+
+```tsx
+import "@radix-ui/themes/styles.css";
+import "@matthewgallo/react-ol-map/styles.css";
+```
+
+## Usage
+
+A `FeatureMap` is a basemap, and you stack layers on it as children:
+
+```tsx
+import { Theme } from "@radix-ui/themes";
+import { AreaLayer, FeatureMap, MarkerLayer } from "@matthewgallo/react-ol-map";
+
+<Theme>
+  <FeatureMap center={[-110.95, 32.25]} zoom={10}>
+    <AreaLayer url="/data/neighborhoods.json" color="grass" title="Neighborhoods" />
+    <MarkerLayer url="/data/libraries.json" color="blue" title="Libraries" cluster />
+  </FeatureMap>
+</Theme>
+```
+
+- **`AreaLayer`** fills shapes in a color, and can `shade` them by a value.
+- **`MarkerLayer`** draws points as pins, or your own `pin` component.
+- **`InteractiveLayer`** is the building block of both: pass it any OpenLayers vector layer.
+
+Layers load GeoJSON (`data`, or `url` to fetch it) or vector tiles (`tiles`, for large datasets). Hovering a feature shows its layer's `renderTooltip`; clicking it zooms to it and opens `renderDialog` in a side panel, or a bottom sheet on touch screens.
+
+## In this Storybook
+
+The sidebar starts with each component's playground, whose Controls change its props live. The rest recreate the sample maps of folklorico, the site this package was extracted from, grouped by what they show:
+
+- **FeatureMap**, **AreaLayer**, **MarkerLayer**: the components and their props
+- **Areas**: shapes, stacked layers and shading
+- **Pins**: markers and custom pins
+- **Clustering**: nearby points drawn as one counted badge
+- **Layers within layers**: layers drawn within a selected feature of another, with legends
+
+Use the toolbar to switch between light and dark themes, and to translate the map's own text. The **Code** panel beside Controls shows each story's source.
+
+## More
+
+The full prop reference, pins, clustering and shading are documented in the [README](https://github.com/matthewgallo/react-ol-map#readme). Source, issues and releases are on [GitHub](https://github.com/matthewgallo/react-ol-map).
