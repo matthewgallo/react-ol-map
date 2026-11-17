@@ -151,7 +151,7 @@ export const LoadError: Story = {
   },
   render: () => (
     <StoryMap {...TUCSON}>
-      <AreaLayer url="/data/geojson/missing.json" color="red" />
+      <AreaLayer url="data/geojson/missing.json" color="red" />
     </StoryMap>
   ),
 };

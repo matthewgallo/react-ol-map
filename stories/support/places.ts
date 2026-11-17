@@ -1,5 +1,6 @@
 // Where folklorico's maps are (src/maps/config.ts), and their data, served
-// from stories/data by .storybook/main.ts
+// from stories/data by .storybook/main.ts. Relative, so they resolve against
+// iframe.html both locally and under GitHub Pages' /react-ol-map/
 
 type Bounds = [west: number, south: number, east: number, north: number];
 
@@ -12,18 +13,18 @@ export const TUCSON = { center: [-110.926, 32.2217] as [number, number], zoom: 1
 
 // Vector tiles, loaded for what's in view
 export const tiles = (name: string) => ({
-  tiles: { url: `/data/tiles/${name}.pmtiles` },
+  tiles: { url: `data/tiles/${name}.pmtiles` },
 });
 
 export const GEOJSON = {
-  arizonaBoundary: "/data/geojson/arizona_boundary.json",
-  tucsonCityLimits: "/data/geojson/tucson_city_limits.json",
-  tucsonLandmarks: "/data/geojson/tucson_landmarks.json",
+  arizonaBoundary: "data/geojson/arizona_boundary.json",
+  tucsonCityLimits: "data/geojson/tucson_city_limits.json",
+  tucsonLandmarks: "data/geojson/tucson_landmarks.json",
 };
 
 // Point CSVs as GeoJSON, for clustering, which needs every point at once
 export const POINTS = {
-  arizonaLibraries: "/data/points/arizona_libraries.json",
-  arizonaSchools: "/data/points/arizona_schools.json",
-  usOrganizations: "/data/points/us_folklorico_organizations.json",
+  arizonaLibraries: "data/points/arizona_libraries.json",
+  arizonaSchools: "data/points/arizona_schools.json",
+  usOrganizations: "data/points/us_folklorico_organizations.json",
 };
