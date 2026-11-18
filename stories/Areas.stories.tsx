@@ -3,8 +3,7 @@ import { DataList, Text } from "@radix-ui/themes";
 import { AreaLayer } from "../src";
 import { StoryMap } from "./support/story-map";
 
-// AreaLayer: polygons filled in a Radix color, over display-only boundaries,
-// as folklorico's sample maps draw them. Each story's render is written as a
+// AreaLayer: polygons filled in a Radix color, over display-only boundaries. Each story's render is written as a
 // consumer would write it (literal URLs, views and tooltips, no story
 // helpers), since it's shown as the story's code (see .storybook/source.ts).
 const meta = {

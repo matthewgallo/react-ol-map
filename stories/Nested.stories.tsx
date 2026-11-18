@@ -33,8 +33,8 @@ import {
 } from "./support/places";
 import { StoryMap } from "./support/story-map";
 
-// Layers drawn within a selected feature of another, as folklorico's maps page
-// does with LayerConfig.parent: click a county or state to draw its areas,
+// Layers drawn within a selected feature of another: click a county or state
+// to draw its areas,
 // schools or organizations, and move between them with the links in the
 // details. Built from useFeatureMap, useLastSelected,
 // useLayerFeatures and `filter` (see support/nested.tsx).

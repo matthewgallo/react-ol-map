@@ -6,8 +6,7 @@ import {
   type PinProps,
 } from "../../src";
 
-// folklorico's papel picado flag pin (src/components/papel-picado), as an
-// example of a custom `pin`
+// A papel picado flag pin, as an example of a custom `pin`
 
 // The flag's shape, in its own units
 const FLAG_WIDTH = 88;

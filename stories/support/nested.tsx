@@ -11,9 +11,8 @@ import {
   type Render,
 } from "../../src";
 
-// How folklorico's maps page draws a layer within another's features, such as
-// a county's schools or a state's organizations (LayerConfig.parent in its
-// src/maps/types.ts). Built from the package's useFeatureMap and
+// Draws a layer within another's features, such as a county's schools or a
+// state's organizations. Built from the package's useFeatureMap and
 // useLastSelected; render the layers in a component inside FeatureMap.
 
 // The child covers its parent, so it's only drawn while the parent's or its

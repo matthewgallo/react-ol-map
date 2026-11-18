@@ -13,8 +13,8 @@ import { StoryLayout, type StorySnippet } from "./story-layout";
 
 import "@radix-ui/themes/styles.css";
 
-// folklorico's Theme (src/main.tsx), in the toolbar's appearance. The map
-// follows the "dark" class on <html>, as next-themes sets it on the site.
+// A Radix Theme in the toolbar's appearance. The map follows the "dark" class
+// on <html>, as next-themes sets it.
 function SiteTheme({
   appearance,
   children,
@@ -115,8 +115,8 @@ const preview: Preview = {
       },
     },
     options: {
-      // The Welcome page, components with their playgrounds, then
-      // folklorico's maps
+      // The Welcome page, components with their playgrounds, then the
+      // sample maps
       storySort: {
         order: [
           "Welcome",

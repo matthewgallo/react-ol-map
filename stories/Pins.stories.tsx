@@ -89,7 +89,7 @@ export const CustomPins: Story = {
   parameters: {
     sampleMap: "Arizona organizations",
     description:
-      "Tile points drawn with a custom `pin` (folklorico's papel picado flag), anchored at its center with `pinAnchor`.",
+      "Tile points drawn with a custom `pin` (a papel picado flag), anchored at its center with `pinAnchor`.",
   },
   render: () => (
     <StoryMap center={[-111.7, 34.2]} zoom={6}>

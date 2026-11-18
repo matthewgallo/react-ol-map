@@ -45,7 +45,7 @@ const yearRange = ({ min, below }: ShadeClass) =>
       ? `${year(min)} on`
       : `${year(min)}–${year(below) - 1}`;
 
-// Data from folklorico's sample maps. Some subdivisions and protected lands
+// Data from the sample maps. Some subdivisions and protected lands
 // have no value, for trying `noData`. A selected state draws its
 // organizations, as on the US organizations sample map.
 const DATASETS: Record<string, Dataset> = {
@@ -135,7 +135,7 @@ export const Playground: Story = {
       options: Object.keys(DATASETS),
       control: { type: "radio" },
       description:
-        "Which of folklorico's sample map tiles to draw (`tiles`).",
+        "Which sample map's tiles to draw (`tiles`).",
     },
     color: {
       ...colorControl,

@@ -13,8 +13,8 @@ const format = (value: unknown) =>
       ? value.toLocaleString(undefined, { maximumFractionDigits: 1 })
       : String(value);
 
-// Tooltip and details content, as folklorico's maps page renders a layer's
-// fields: a list per feature, with a rule between features on the same spot
+// Tooltip and details content, rendering a layer's fields: a list per
+// feature, with a rule between features on the same spot
 export const renderFields =
   (fields: Fields): Render =>
   (features: FeatureProps[]) =>

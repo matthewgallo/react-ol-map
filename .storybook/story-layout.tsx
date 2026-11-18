@@ -6,8 +6,8 @@ import { ThemeProvider, convert } from "storybook/theming";
 import { storybookTheme, type Appearance } from "./appearance";
 import { storySnippet } from "./source";
 
-// The page around every story: its group and name, which of folklorico's
-// sample maps it's drawn from (the `sampleMap` parameter), its `description`,
+// The page around every story: its group and name, which sample map it's
+// drawn from (the `sampleMap` parameter), its `description`,
 // the map, and its code when it has any to show (its `snippet` parameter, or
 // see storySnippet).
 

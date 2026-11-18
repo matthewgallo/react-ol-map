@@ -113,7 +113,7 @@ export const Playground: Story = {
 };
 
 // `bounds` fits an area to the map, whatever its size, in place of center and
-// zoom. Most of folklorico's maps open this way.
+// zoom. Most of the sample maps open this way.
 export const FitToBounds: Story = {
   parameters: {
     description:

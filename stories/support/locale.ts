@@ -7,8 +7,7 @@ export type Locale = "en" | "es";
 export const LocaleContext = createContext<Locale>("en");
 export const useLocale = () => useContext(LocaleContext);
 
-// folklorico's Spanish map text (src/i18n/locales/es.ts). English is the
-// package's default.
+// The map's text in Spanish. English is the package's default.
 export const SPANISH_LABELS: MapLabels = {
   details: "Detalles",
   close: "Cerrar",

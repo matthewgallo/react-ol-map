@@ -1,4 +1,4 @@
-// Where folklorico's maps are (src/maps/config.ts), and their data, served
+// Where the sample maps are, and their data, served
 // from stories/data by .storybook/main.ts. Relative, so they resolve against
 // iframe.html both locally and under GitHub Pages' /react-ol-map/
 

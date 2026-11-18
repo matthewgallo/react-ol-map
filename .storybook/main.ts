@@ -1,8 +1,7 @@
 import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/react-vite";
 
-// The stories' data, copied from folklorico's public/data and served as /data
-// like the site does
+// The stories' data, served as /data
 const data = fileURLToPath(new URL("../stories/data", import.meta.url));
 // The README's screenshots, for the Welcome page
 const images = fileURLToPath(new URL("../docs/images", import.meta.url));
