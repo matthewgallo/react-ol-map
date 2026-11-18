@@ -9,7 +9,7 @@ import { Theme } from "@radix-ui/themes";
 import { appearanceOf, storybookTheme, type Appearance } from "./appearance";
 import { LocaleContext, type Locale } from "../stories/support/locale";
 import { storySource } from "./source";
-import { StoryLayout } from "./story-layout";
+import { StoryLayout, type StorySnippet } from "./story-layout";
 
 import "@radix-ui/themes/styles.css";
 
@@ -108,6 +108,9 @@ const preview: Preview = {
       source: {
         type: "dynamic",
         transform: (code: string, context: StoryContext) =>
+          (context.parameters.snippet as StorySnippet | undefined)?.(
+            context.args,
+          ) ??
           storySource(context.parameters.docs?.source?.originalSource ?? code),
       },
     },

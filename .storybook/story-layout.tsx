@@ -8,7 +8,12 @@ import { storySnippet } from "./source";
 
 // The page around every story: its group and name, which of folklorico's
 // sample maps it's drawn from (the `sampleMap` parameter), its `description`,
-// the map, and its code when it has any to show (see storySnippet).
+// the map, and its code when it has any to show (its `snippet` parameter, or
+// see storySnippet).
+
+// A story's own code, from its args: the `snippet` parameter, for stories
+// whose code storySnippet can't make, such as ones built from Controls
+export type StorySnippet = (args: StoryContext["args"]) => string | undefined;
 
 // `backticked` spans of a description as inline code
 function Description({ text }: { text: string }) {
@@ -33,20 +38,27 @@ function Description({ text }: { text: string }) {
 function StoryCode({
   source,
   storyName,
+  snippet,
   appearance,
 }: {
   source?: string;
   storyName: string;
+  // The story's own code, in place of one made from its source
+  snippet?: string;
   appearance: Appearance;
 }) {
-  const [code, setCode] = useState<string>();
+  const [generated, setGenerated] = useState<string>();
   useEffect(() => {
+    if (snippet !== undefined) return;
     let current = true;
-    storySnippet(source, storyName).then((formatted) => current && setCode(formatted));
+    storySnippet(source, storyName).then(
+      (formatted) => current && setGenerated(formatted),
+    );
     return () => {
       current = false;
     };
-  }, [source, storyName]);
+  }, [source, storyName, snippet]);
+  const code = snippet ?? generated;
   if (!code) return null;
   return (
     <Flex direction="column" gap="2">
@@ -76,9 +88,10 @@ export function StoryLayout({
   children: ReactNode;
 }) {
   const { title, name, parameters } = context;
-  const { sampleMap, description } = parameters as {
+  const { sampleMap, description, snippet } = parameters as {
     sampleMap?: string;
     description?: string;
+    snippet?: StorySnippet;
   };
   return (
     <Flex direction="column" gap="5" p="5" maxWidth="960px" mx="auto">
@@ -104,6 +117,7 @@ export function StoryLayout({
       <StoryCode
         source={parameters.docs?.source?.originalSource}
         storyName={name}
+        snippet={snippet?.(context.args)}
         appearance={appearance}
       />
     </Flex>

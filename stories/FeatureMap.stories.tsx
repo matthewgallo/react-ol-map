@@ -1,15 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import StadiaMaps from "ol/source/StadiaMaps";
-import {
-  AreaLayer,
-  MarkerLayer,
-  cartoBasemap,
-  esriGrayBasemap,
-  osmBasemap,
-  stadiaBasemap,
-  type Appearance,
-  type BasemapOption,
-} from "../src";
+import { AreaLayer, MarkerLayer, type Appearance } from "../src";
+import { BASEMAP_EXAMPLES, basemapSnippet } from "./support/basemaps";
 import { BOUNDS, CENTERS, selectOf } from "./support/controls";
 import { renderFields } from "./support/fields";
 import { GEOJSON, tiles } from "./support/places";
@@ -139,78 +130,19 @@ export const FitToBounds: Story = {
   ),
 };
 
-const OSM_CONTRIBUTORS =
-  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const ESRI_TILES = 'Tiles © <a href="https://www.esri.com">Esri</a>';
-const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services";
-
-// The presets, then other free tiles that need no key (Stadia's only on
-// localhost or an allowed domain). Most have a single style for light and
-// dark. Defined once, outside render: a new `source` function each render
-// would make a new source each time.
-const BASEMAPS: Record<string, BasemapOption> = {
-  "CARTO (cartoBasemap)": cartoBasemap(import.meta.env.VITE_MAP_KEY),
-  "OpenStreetMap (osmBasemap)": osmBasemap(),
-  "Stadia Alidade Smooth (stadiaBasemap)": stadiaBasemap(),
-  "Esri Gray Canvas (esriGrayBasemap)": esriGrayBasemap(),
-  "Esri World Imagery": {
-    url: () => `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
-    attributions: `${ESRI_TILES} — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community`,
-    maxZoom: 19,
-  },
-  "Esri World Topo": {
-    url: () => `${ESRI}/World_Topo_Map/MapServer/tile/{z}/{y}/{x}`,
-    attributions: `${ESRI_TILES} — Esri, HERE, Garmin, USGS, ${OSM_CONTRIBUTORS}`,
-    maxZoom: 19,
-  },
-  // Public domain, United States only
-  "USGS Topo": {
-    url: () =>
-      "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}",
-    attributions:
-      'Tiles courtesy of the <a href="https://www.usgs.gov/">U.S. Geological Survey</a>',
-    maxZoom: 16,
-  },
-  OpenTopoMap: {
-    url: () => "https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png",
-    attributions: `${OSM_CONTRIBUTORS}, SRTM | Style: © <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)`,
-    maxZoom: 17,
-  },
-  "Humanitarian OSM": {
-    url: () => "https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-    attributions: `${OSM_CONTRIBUTORS}, style by <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>, hosted by <a href="https://openstreetmap.fr/">OpenStreetMap France</a>`,
-    maxZoom: 19,
-  },
-  CyclOSM: {
-    url: () =>
-      "https://{a-c}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
-    attributions: `<a href="https://www.cyclosm.org">CyclOSM</a> | ${OSM_CONTRIBUTORS}`,
-    maxZoom: 20,
-  },
-  // Custom OpenLayers sources, through `source`
-  "Stamen Toner (custom source)": {
-    source: (dark) =>
-      new StadiaMaps({ layer: dark ? "stamen_toner_dark" : "stamen_toner" }),
-  },
-  "Stamen Terrain (custom source)": {
-    source: () => new StadiaMaps({ layer: "stamen_terrain" }),
-  },
-  "Stamen Watercolor (custom source)": {
-    source: () => new StadiaMaps({ layer: "stamen_watercolor" }),
-  },
-};
-
 export const Basemaps: StoryObj<{ basemap: string }> = {
   args: { basemap: "CARTO (cartoBasemap)" },
   argTypes: {
     basemap: {
-      ...selectOf(BASEMAPS),
+      ...selectOf(BASEMAP_EXAMPLES),
       description:
         "The tiles beneath the layers. Switch the theme to see the dark style of those that have one (CARTO, Stadia Alidade Smooth, Esri Gray Canvas, Stamen Toner).",
     },
   },
   parameters: {
     controls: { disable: false },
+    // The code for the chosen basemap, under the map and in the Code panel
+    snippet: basemapSnippet,
     description:
       "Each basemap preset, other free tiles as `{ url, attributions, maxZoom }`, and custom OpenLayers sources (`{ source: (dark) => TileSource }`). Switching keeps the view, and the attribution follows the provider. Stadia's tiles load only on localhost or a domain allowed in Stadia.",
   },
@@ -218,7 +150,7 @@ export const Basemaps: StoryObj<{ basemap: string }> = {
     <StoryMap
       center={[-110.926, 32.2217]}
       zoom={11}
-      basemap={BASEMAPS[basemap]}
+      basemap={BASEMAP_EXAMPLES[basemap].basemap}
     >
       <AreaLayer
         url="data/geojson/tucson_city_limits.json"
