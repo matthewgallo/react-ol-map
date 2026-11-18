@@ -45,10 +45,45 @@ import "@matthewgallo/react-ol-map/styles.css";
 
 | Prop         | Default             | Purpose                                                                                       |
 | ------------ | ------------------- | --------------------------------------------------------------------------------------------- |
-| `basemap`    | `cartoBasemap()`    | Tiles beneath the layers. `cartoBasemap(apiKey)` adds a CARTO key; or pass your own `{ url: (dark) => string, attributions, maxZoom }` |
+| `basemap`    | `cartoBasemap()`    | Tiles beneath the layers (see [Basemaps](#basemaps))                                          |
 | `appearance` | the page's          | `"light"` or `"dark"` basemap. Unset, it follows a `dark` or `dark-theme` class on `<html>`   |
 | `labels`     | English             | Any of the map's text, translated (see `MapLabels`)                                           |
 | `locale`     | the browser's       | Formats numbers in legends                                                                    |
+
+### Basemaps
+
+Each basemap has a light and a dark style, picked by `appearance`. There are presets for a few providers:
+
+| Preset                   | Tiles                                                   | Needs                                                                                     |
+| ------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `cartoBasemap(apiKey?)`  | CARTO Positron and Dark Matter                          | A CARTO key; without one, CARTO draws "API KEY REQUIRED" tiles                            |
+| `stadiaBasemap(apiKey?)` | Stadia Maps Alidade Smooth and Alidade Smooth Dark       | Nothing on localhost; elsewhere, a key or your domain allowed in Stadia                   |
+| `esriGrayBasemap()`      | Esri Light Gray Canvas and Dark Gray Canvas (up to zoom 16) | Nothing; Esri expects production apps to have an ArcGIS account                           |
+| `osmBasemap()`           | OpenStreetMap's standard tiles (the same in light and dark) | Light use only, under OSM's [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) |
+
+For any other XYZ raster tiles, give a URL template for each style:
+
+```tsx
+const basemap: Basemap = {
+  url: (dark) => `https://tiles.example.com/${dark ? "dark" : "light"}/{z}/{x}/{y}.png`,
+  attributions: '© <a href="https://example.com">Example</a>',
+  maxZoom: 18,
+};
+
+<FeatureMap basemap={basemap}>…</FeatureMap>
+```
+
+Or return any OpenLayers tile source (WMTS, TileWMS, StadiaMaps, ...) with `source`. It's called again when the appearance changes, and the map disposes of the sources it's done with. Define it outside render, or memoize it, since a new function makes a new source:
+
+```tsx
+import StadiaMaps from "ol/source/StadiaMaps";
+
+const toner: SourceBasemap = {
+  source: (dark) => new StadiaMaps({ layer: dark ? "stamen_toner_dark" : "stamen_toner" }),
+};
+```
+
+The basemap can change after mount: the map keeps its view, and the attribution and max zoom follow the new provider.
 
 ### Colors
 

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { Callout, Skeleton } from "@radix-ui/themes";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { Map, View, TileLayer } from "react-openlayers";
+import { Map, View } from "react-openlayers";
 import { fromLonLat } from "ol/proj";
 import type OLMap from "ol/Map";
 import type BaseLayer from "ol/layer/Base";
@@ -18,7 +18,7 @@ import {
   cartoBasemap,
   useBasemap,
   type Appearance,
-  type Basemap,
+  type BasemapOption,
 } from "./hooks/useBasemap";
 import { DEFAULT_LABELS, LabelsContext, type MapLabels } from "./labels";
 import { useCloseOnEscape } from "./hooks/useCloseOnEscape";
@@ -63,7 +63,7 @@ export interface FeatureMapProps {
   // show a reset button once moved away from `center` and `zoom`
   resetView?: boolean;
   // Tiles beneath the layers; CARTO's by default (see cartoBasemap)
-  basemap?: Basemap;
+  basemap?: BasemapOption;
   // Light or dark basemap. Follows a "dark" or "dark-theme" class on <html>
   // when unset, as Radix Themes and next-themes set.
   appearance?: Appearance;
@@ -98,7 +98,7 @@ export function FeatureMap({
   const labelsContext = useMemo(() => ({ labels, locale }), [labels, locale]);
   const isTouch = useIsTouchScreen();
   const [map, setMap] = useState<OLMap | null | undefined>(null);
-  const basemap = useBasemap(basemapOptions, appearance);
+  useBasemap(map, basemapOptions, appearance);
   useFullScreenControl(map, fullScreen, labels.fullScreen);
   // Until `bounds` are fitted, start in their middle
   const [lon, lat] =
@@ -294,7 +294,6 @@ export function FeatureMap({
       >
         {/* react-openlayers adds an OSM layer unless `layers` is given, which means extra layers would be rendered unintentionally */}
         <Map ref={setMap} layers={[]}>
-          <TileLayer source={basemap} />
           <View center={viewCenter} zoom={zoom} />
           {resetView && (
             <ResetViewButton map={map} center={home.center} zoom={home.zoom} />
