@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/matthewgallo/react-ol-map/compare/v1.1.2...v1.2.0) (2026-11-18)
+
+
+### Features
+
+* add new custom basemap support and story ([d93112d](https://github.com/matthewgallo/react-ol-map/commit/d93112da1b218151184402d405272f0469a9e74e))
+
 ## [1.1.2](https://github.com/matthewgallo/react-ol-map/compare/v1.1.1...v1.1.2) (2026-11-10)
 
 
